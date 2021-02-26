@@ -5,6 +5,11 @@ from selenium import webdriver
 from ttkthemes import ThemedTk
 
 tk = ThemedTk(theme="arc")
+tk.minsize(width=300, height=150)
+tk.title("Anti Scalp")
+
+f = Frame(tk)
+f.grid()
 
 class Broswer():
     def __init__(self, browser="firefox", max_gets=10, headless=True, options=None):
@@ -60,9 +65,7 @@ class Broswer():
     def close(self):
         self.driver.close()
 
-o = webdriver.firefox.options.Options()
-o.binary_location = r"C:\Users\mis1852\AppData\Local\Mozilla Firefox\firefox.exe"
-b = Broswer(options=o)
+b = Broswer()
 
 tk.mainloop()
 b.close()
