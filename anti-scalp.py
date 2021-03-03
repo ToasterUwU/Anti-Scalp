@@ -149,7 +149,7 @@ class Link_Checker():
                     if not checker.run:
                         break
 
-                    price = b.get_price(link)
+                    price = b.get_buyable_price(link)
                     if price["result"]:
                         self.return_func(price)
 
