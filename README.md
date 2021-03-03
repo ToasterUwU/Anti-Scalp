@@ -17,3 +17,8 @@ Me too man..
 
 # What it can do
 
+
+
+## Credits
+
+Standard Alert Sound: https://soundbible.com/2155-Text-Message-Alert-2.html
