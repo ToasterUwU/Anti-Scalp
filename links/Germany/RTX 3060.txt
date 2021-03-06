@@ -1,17 +1,3 @@
-https://www.amazon.de/ASUS-Grafikkarte-Speicher-DisplayPort-ROG-STRIX-RTX3060TI-O8G-GAMING/dp/B08NZ4J2XV/ref=sr_1_1?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=rtx%2B3060&qid=1614436641&sr=8-1&th=1
-
-https://www.amazon.de/MSI-RTX-3060-VENTUS-3X/dp/B08QZLMC86/ref=sr_1_3?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=RTX%2B3060&linkCode=ll2&linkId=466e47da77130057f213c40088110fa7&qid=1614441952&s=computers&sr=1-3&th=1
-
-https://www.amazon.de/MSI-RTX-3060-VENTUS-3X/dp/B08NW32F74/ref=sr_1_3?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=RTX%2B3060&linkCode=ll2&linkId=466e47da77130057f213c40088110fa7&qid=1614441952&s=computers&sr=1-3&th=1
-
-https://www.amazon.de/Palit-Ray-Tracing-Grafikkarte-1410MHz-DisplayPort/dp/B08PHCNRS6/ref=sr_1_1?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=RTX%2B3060&linkCode=ll2&linkId=466e47da77130057f213c40088110fa7&qid=1614441952&s=computers&sr=1-1&th=1
-
-https://www.amazon.de/Palit-Ray-Tracing-Grafikkarte-1410MHz-DisplayPort/dp/B08PG4XM21/ref=sr_1_1?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=RTX%2B3060&linkCode=ll2&linkId=466e47da77130057f213c40088110fa7&qid=1614441952&s=computers&sr=1-1&th=1
-
-https://www.amazon.de/Palit-Ray-Tracing-Grafikkarte-1410MHz-DisplayPort/dp/B08PFYNBFK/ref=sr_1_1?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=RTX%2B3060&linkCode=ll2&linkId=466e47da77130057f213c40088110fa7&qid=1614441952&s=computers&sr=1-1&th=1
-
-
-
 https://www.alternate.de/EVGA/GeForce-RTX-3060-XC-GAMING-Grafikkarte/html/product/1727976
 
 
@@ -33,8 +19,6 @@ https://www.mediamarkt.de/de/product/_asus-geforce-tuf-gaming-tuf-rtx-3060-o12g-
 https://www.mediamarkt.de/de/product/_asus-geforce-rog-strix-rtx-3060-o12g-gaming-12-gb-90yv0gc2-m0na00-2719148.html
 
 https://www.mediamarkt.de/de/product/_gigabyte-gv-n3060gaming-oc-12gd-rtx-3060-gaming-oc-12gb-2719314.html
-
-https://www.mediamarkt.de/de/product/_gigabyte-gv-n3060eagle-oc-12gd-rtx-3060-eagle-oc-12gb-2719315.html
 
 https://www.mediamarkt.de/de/product/_inno3d-geforce%C2%AE-rtx-3060-twin-x2-oc-12-gb-n30602-12d6x-11902120-2718594.html
 
