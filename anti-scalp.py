@@ -237,10 +237,11 @@ class Selenium_Checker(Checker):
                         break
 
                     shopname = utility.shopname(link)
-                    if shopname in checker.selectors:
+                    if shopname in b.selectors:
 
                         data_dict = b.buyable_price(link)
-                        checker.return_func(data_dict)
+                        if data_dict:
+                            checker.return_func(data_dict)
 
                     else:
                         links.remove(link)
@@ -329,6 +330,7 @@ class Request_Checker(Checker):
     def start(self):
         def check_links(checker:Request_Checker, links:list):
             r = Requester()
+            number = checker._get_i()
             while checker.run:
                 for link in links:
                     shopname = utility.shopname(link)
@@ -345,64 +347,14 @@ class Request_Checker(Checker):
 
                     else:
                         links.remove(link)
-                        checker.log(f"REQUESTS: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
+                        checker.log(f"REQUESTS-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
 
                 if len(links) != 0:
-                    checker.log(f"REQUESTS: Finished full cycle of {len(links)} links. Re-checking now.")
+                    checker.log(f"REQUESTS-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
 
         self.run = True
         for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
             threading.Thread(name="Browser-Thread", target=check_links, args=[self, part_links], daemon=True).start()
-
-class Requests_Checker():
-    def __init__(self, links:Iterable, return_func:Callable, logging_func:Callable) -> None:
-        self.links = links
-        self.return_func = return_func
-        self.logging_func = logging_func
-        self.run = False
-
-        with open("selectors.json", "r") as f:
-            self.selectors = json.load(f)
-
-    def start(self):
-        def check_links(checker:Requests_Checker, links:list):
-            if len(links) >= 30:
-                wait = 2*len(links)
-            else:
-                wait = 60/len(links)
-
-            while checker.run:
-                for link in links:
-                    shopname = utility.shopname(link)
-                    if shopname in checker.selectors:
-                        bs, title = checker.get(link)
-                        if not bs:
-                            links.remove(link)
-                            checker.log(f"{utility.shopname(link)} doesnt allow bot access. Use Selenium instead of Requests.")
-                            continue
-
-                        if checker.buyable(bs, shopname):
-                            result = checker.price(bs, shopname)
-                            if result:
-                                checker.return_func({"result": result, "title": title, "link": link, "unsupported": False})
-                    else:
-                        links.remove(link)
-                        checker.log(f"REQUESTS: Removed a {utility.shopname(link)} link. This shop isnt supported. Please add the configuration for {utility.shopname(link)}.")
-
-                    time.sleep(wait)
-
-                if len(links) != 0:
-                    checker.log(f"REQUESTS: Finished full cycle of {len(links)} links. Re-checking now.")
-
-        self.run = True
-        threading.Thread(name="Requests-Thread", target=check_links, args=[self, self.links], daemon=True).start()
-
-    def stop(self):
-        self.run = False
-
-    def log(self, msg:str):
-        if self.logging_func:
-            self.logging_func(msg)
 
 class Link_Getter():
     def __init__(self) -> None:
@@ -543,18 +495,18 @@ getter.add_region("Germany")
 getter.add_product("RTX 3060")
 getter.add_product("RTX 3060 TI")
 
-r = Requester()
-b = Broswer()
+# r = Requester()
+# b = Broswer()
 
-for link in getter.get_requests_links():
-    data = r.price(link)
-    if data:
-        print(utility.format_price(data["result"]))
+# for link in getter.get_requests_links():
+#     data = r.price(link)
+#     if data:
+#         print(utility.format_price(data["result"]))
 
-for link in getter.get_selenium_links():
-    data = b.price(link)
-    if data:
-        print(utility.format_price(data["result"]))
+# for link in getter.get_selenium_links():
+#     data = b.price(link)
+#     if data:
+#         print(utility.format_price(data["result"]))
 
 req_checker = Request_Checker(getter.get_requests_links(), return_func=alert, logging_func=lambda msg: print(msg))
 req_checker.start()
