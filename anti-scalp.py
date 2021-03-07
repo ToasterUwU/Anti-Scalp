@@ -3,24 +3,20 @@ import math
 import os
 import re
 import shutil
+import sys
 import threading
 import time
 import webbrowser
 from difflib import SequenceMatcher
 from itertools import cycle
-from tkinter import filedialog as fd
-from tkinter.ttk import *
 from typing import Callable, Iterable
+from PyQt5.QtCore import QRect
 
 import playsound
 import requests
 from bs4 import BeautifulSoup
+from PyQt5.QtWidgets import QApplication, QCheckBox, QErrorMessage, QGridLayout, QGroupBox, QLabel, QMessageBox, QPushButton, QWidget
 from selenium import webdriver
-from ttkthemes import ThemedTk
-
-tk = ThemedTk(theme="arc")
-tk.minsize(width=300, height=150)
-tk.title("Anti Scalp")
 
 
 class utility():
@@ -239,7 +235,11 @@ class Selenium_Checker(Checker):
                     shopname = utility.shopname(link)
                     if shopname in b.selectors:
 
-                        data_dict = b.buyable_price(link)
+                        try:
+                            data_dict = b.buyable_price(link)
+                        except:
+                            continue
+
                         if data_dict:
                             checker.return_func(data_dict)
 
@@ -254,11 +254,11 @@ class Selenium_Checker(Checker):
             checker.log(f"BROWSER-{number}: Closing, no links left.")
 
         self.run = True
-        for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
-            threading.Thread(name="Browser-Thread", target=check_links, args=[self, part_links], daemon=True).start()
-            time.sleep(5)
-            tk.update()
-            tk.update_idletasks()
+        def start_ths():
+            for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
+                threading.Thread(name="Browser-Thread", target=check_links, args=[self, part_links], daemon=True).start()
+                time.sleep(5)
+        threading.Thread(name="Browser-Starter", target=start_ths, daemon=True).start()
 
 class Requester():
     def __init__(self) -> None:
@@ -354,7 +354,7 @@ class Request_Checker(Checker):
 
         self.run = True
         for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
-            threading.Thread(name="Browser-Thread", target=check_links, args=[self, part_links], daemon=True).start()
+            threading.Thread(name="Requester-Thread", target=check_links, args=[self, part_links], daemon=True).start()
 
 class Link_Getter():
     def __init__(self) -> None:
@@ -381,9 +381,6 @@ class Link_Getter():
 
                 self.all_links[folder][txt.replace(".txt", "").lower()] = lines
 
-    def get_shopname(self, link:str):
-        return link.split("://", 1)[1].split("/", 1)[0].split(".")[1]
-
     def add_region(self, region:str):
         region = region.lower()
 
@@ -396,11 +393,7 @@ class Link_Getter():
     def add_product(self, product:str):
         product = product.lower()
 
-        all_products = []
-        for region in self.all_links:
-            for p in self.all_links[region]:
-                if p not in all_products:
-                    all_products.append(p)
+        all_products = self.all_products()
 
         if product not in all_products:
             raise KeyError(f"ERROR: {product} isnt in the saved Products.")
@@ -417,6 +410,27 @@ class Link_Getter():
         product = product.lower()
         while product in self.products:
             self.products.remove(product)
+
+    def clear_regions(self):
+        self.regions = []
+
+    def clear_products(self):
+        self.products = []
+
+    def clear_all(self):
+        self.products = []
+        self.regions = []
+
+    def all_regions(self):
+        return [x for x in self.all_links]
+
+    def all_products(self):
+        all_products = []
+        for region in self.all_links:
+            for p in self.all_links[region]:
+                if p not in all_products:
+                    all_products.append(p)
+        return all_products
 
     def get_all_links(self):
         links = []
@@ -460,58 +474,136 @@ class Link_Getter():
 
         return new_links
 
+class GUI():
+    def __init__(self) -> None:
+        self.getter = Link_Getter()
 
-def play_alert():
-    mp3_exists = os.path.exists("alert.mp3")
-    wav_exists = os.path.exists("alert.wav")
-    if not mp3_exists and not wav_exists:
-        playsound.playsound("standard_alert.mp3", block=False)
-    else:
-        if mp3_exists:
-            playsound.playsound("alert.mp3", block=False)
+        self.app = QApplication(sys.argv)
+        self.msgs = []
+
+    def mainloop(self):
+        self.app.exec()
+
+    def play_sound(self):
+        mp3_exists = os.path.exists("alert.mp3")
+        wav_exists = os.path.exists("alert.wav")
+        if not mp3_exists and not wav_exists:
+            playsound.playsound("standard_alert.mp3", block=False)
         else:
-            playsound.playsound("alert.wav", block=False)
+            if mp3_exists:
+                playsound.playsound("alert.mp3", block=False)
+            else:
+                playsound.playsound("alert.wav", block=False)
 
-def change_sound():
-    filename = fd.askopenfilename(filetypes=[("Sounds", "*.mp3 *.wav")])
-    shutil.copy2(filename, "sound."+filename.rsplit(".", 1)[1])
+    def change_sound():
+        filename = fd.askopenfilename(filetypes=[("Sounds", "*.mp3 *.wav")])
+        shutil.copy2(filename, "sound."+filename.rsplit(".", 1)[1])
 
-def reset_sound():
-    if os.path.exists("sound.mp3"):
-        os.remove("sound.mp3")
-    if os.path.exists("sound.wav"):
-        os.remove("sound.wav")
+    def reset_sound():
+        if os.path.exists("sound.mp3"):
+            os.remove("sound.mp3")
+        if os.path.exists("sound.wav"):
+            os.remove("sound.wav")
 
-def alert(data_dict:dict):
-    print(f"FOUND {data_dict['title']} -> {data_dict['result']}")
-    play_alert()
-    webbrowser.open(data_dict["link"])
-    req_checker.stop()
-    sel_checker.stop()
+    def log(self, msg):
+        self.msgs = self.msgs[-9:]
+        self.msgs.append(msg)
+        self.log_box.setText("\n".join(self.msgs))
+        print(msg)
 
+    def alert(self, data_dict:dict):
+        self.msg_box_var.set(self.msg_box_var.get()+"\n"+f"FOUND {data_dict['title']} -> {data_dict['result']}")
+        print(f"FOUND {data_dict['title']} -> {data_dict['result']}")
+        self.play_alert()
+        webbrowser.open(data_dict["link"])
+        req_checker.stop()
+        sel_checker.stop()
 
-getter = Link_Getter()
-getter.add_region("Germany")
-getter.add_product("RTX 3060")
-getter.add_product("RTX 3060 TI")
+    def update_regions(self, garbage):
+        self.getter.clear_regions()
+        for name, box in self.region_check_boxes.items():
+            if box.isChecked():
+                self.getter.add_region(name)
 
-# r = Requester()
-# b = Broswer()
+    def update_products(self, garbage):
+        self.getter.clear_products()
+        for name, box in self.product_check_boxes.items():
+            if box.isChecked():
+                self.getter.add_product(name)
 
-# for link in getter.get_requests_links():
-#     data = r.price(link)
-#     if data:
-#         print(utility.format_price(data["result"]))
+    def start_checking(self):
+        if self.getter.regions == []:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Missing Regions")
+            msg.setText("Please select at least one region.")
+            msg.exec()
+            return
 
-# for link in getter.get_selenium_links():
-#     data = b.price(link)
-#     if data:
-#         print(utility.format_price(data["result"]))
+        elif self.getter.products == []:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Missing Products")
+            msg.setText("Please select at least one product.")
+            msg.exec()
+            return
 
-req_checker = Request_Checker(getter.get_requests_links(), return_func=alert, logging_func=lambda msg: print(msg))
-req_checker.start()
+        self.start_btn.setText("Stop")
+        self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log)
+        self.req_checker.start()
 
-sel_checker = Selenium_Checker(getter.get_selenium_links(), return_func=alert, logging_func=lambda msg: print(msg))
-sel_checker.start()
+        self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log)
+        self.sel_checker.start()
 
-tk.mainloop()
+    def main_window(self):
+        self.main = QWidget()
+        self.main.setWindowTitle("Anti Scalp")
+        self.main_layout = QGridLayout()
+
+        regions = self.getter.all_regions()
+        self.region_box = QGroupBox("Regions")
+        self.region_grid = QGridLayout()
+        self.region_box.setLayout(self.region_grid)
+
+        row = 0
+        self.region_check_boxes = {}
+        for r in regions:
+            self.region_check_boxes[r] = QCheckBox(text=r.capitalize())
+            self.region_check_boxes[r].stateChanged.connect(self.update_regions)
+            self.region_grid.addWidget(self.region_check_boxes[r], row, 0)
+            self.region_check_boxes[r].show()
+            row += 1
+
+        self.main_layout.addWidget(self.region_box, 0, 0)
+
+        self.log_box = QLabel()
+        self.log_box.setGeometry(QRect(0, 0, 250, 100))
+        self.main_layout.addWidget(self.log_box, 0, 1)
+
+        products = self.getter.all_products()
+        self.product_box = QGroupBox("Products")
+        self.product_grid = QGridLayout()
+        self.product_box.setLayout(self.product_grid)
+
+        row = 0
+        self.product_check_boxes = {}
+        for p in products:
+            self.product_check_boxes[p] = QCheckBox(text=p.upper())
+            self.product_check_boxes[p].stateChanged.connect(self.update_products)
+            self.product_grid.addWidget(self.product_check_boxes[p], row, 0)
+            row += 1
+
+        self.main_layout.addWidget(self.product_box, 0, 2)
+
+        self.start_btn = QPushButton(text="Start")
+        self.start_btn.clicked.connect(self.start_checking)
+        self.start_btn.setGeometry(QRect(0, 0, 50, 25))
+        self.main_layout.addWidget(self.start_btn, 1, 1)
+
+        self.main.setLayout(self.main_layout)
+        self.main.show()
+
+gui = GUI()
+
+gui.main_window()
+gui.mainloop()
