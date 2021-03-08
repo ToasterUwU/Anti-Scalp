@@ -10,18 +10,19 @@ import webbrowser
 from difflib import SequenceMatcher
 from itertools import cycle
 from typing import Callable, Iterable
-from PyQt5.QtCore import QRect
 
 import playsound
 import requests
 from bs4 import BeautifulSoup
-from PyQt5.QtWidgets import QApplication, QCheckBox, QErrorMessage, QGridLayout, QGroupBox, QLabel, QMessageBox, QPushButton, QWidget
+from PyQt5.QtCore import QRect
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
+                             QLabel, QMessageBox, QPushButton, QWidget)
 from selenium import webdriver
 
 
 class utility():
     def evenly_chunk(items:Iterable, max_chunk_size:int=20):
-        chunk_amount = math.ceil(len(items)/20)
+        chunk_amount = math.ceil(len(items)/max_chunk_size)
         result = [[] for _ in range(chunk_amount)]
 
         for element, chunk in zip(items, cycle(result)):
@@ -221,15 +222,15 @@ class Selenium_Checker(Checker):
         self.b_kwargs = browser_kwargs
 
     def start(self):
-        def check_links(checker:Selenium_Checker, links:list):
-            b = Broswer(**checker.b_kwargs)
-            number = checker._get_i()
-            while checker.run:
+        def check_links(links:list):
+            b = Broswer(**self.b_kwargs)
+            number = self._get_i()
+            while self.run:
                 if links == []:
                     break
 
                 for link in links:
-                    if not checker.run:
+                    if not self.run:
                         break
 
                     shopname = utility.shopname(link)
@@ -241,22 +242,25 @@ class Selenium_Checker(Checker):
                             continue
 
                         if data_dict:
-                            checker.return_func(data_dict)
+                            self.return_func(data_dict)
 
                     else:
                         links.remove(link)
-                        checker.log(f"BROWSER-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
+                        self.log(f"BROWSER-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
 
                 if len(links) != 0:
-                    checker.log(f"BROWSER-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
+                    self.log(f"BROWSER-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
 
             b.close()
-            checker.log(f"BROWSER-{number}: Closing, no links left.")
+            if links == []:
+                self.log(f"BROWSER-{number}: Closing, no links left.")
+            else:
+                self.log(f"BROWSER-{number}: Closing.")
 
         self.run = True
         def start_ths():
             for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
-                threading.Thread(name="Browser-Thread", target=check_links, args=[self, part_links], daemon=True).start()
+                threading.Thread(name="Browser-Thread", target=check_links, args=[part_links], daemon=True).start()
                 time.sleep(5)
         threading.Thread(name="Browser-Starter", target=start_ths, daemon=True).start()
 
@@ -328,33 +332,44 @@ class Requester():
 
 class Request_Checker(Checker):
     def start(self):
-        def check_links(checker:Request_Checker, links:list):
+        def check_links(links:list):
             r = Requester()
-            number = checker._get_i()
-            while checker.run:
+            number = self._get_i()
+            while self.run:
+                if links == []:
+                    break
+
                 for link in links:
+                    if not self.run:
+                        break
+
                     shopname = utility.shopname(link)
                     if shopname in r.selectors:
                         try:
                             data_dict = r.buyable_price(link)
                         except:
                             links.remove(link)
-                            checker.log(f"{shopname} doesnt allow bot access. Use Selenium instead of Requests.")
+                            self.log(f"{shopname} doesnt allow bot access. Use Selenium instead of Requests.")
                             continue
 
                         if data_dict:
-                            checker.return_func(data_dict)
+                            self.return_func(data_dict)
 
                     else:
                         links.remove(link)
-                        checker.log(f"REQUESTS-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
+                        self.log(f"REQUESTS-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
 
                 if len(links) != 0:
-                    checker.log(f"REQUESTS-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
+                    self.log(f"REQUESTS-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
+
+            if links == []:
+                self.log(f"REQUESTS-{number}: Closing, no links left.")
+            else:
+                self.log(f"REQUESTS-{number}: Closing.")
 
         self.run = True
         for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
-            threading.Thread(name="Requester-Thread", target=check_links, args=[self, part_links], daemon=True).start()
+            threading.Thread(name="Requester-Thread", target=check_links, args=[part_links], daemon=True).start()
 
 class Link_Getter():
     def __init__(self) -> None:
@@ -509,15 +524,14 @@ class GUI():
         self.msgs = self.msgs[-9:]
         self.msgs.append(msg)
         self.log_box.setText("\n".join(self.msgs))
-        print(msg)
 
     def alert(self, data_dict:dict):
         self.msg_box_var.set(self.msg_box_var.get()+"\n"+f"FOUND {data_dict['title']} -> {data_dict['result']}")
         print(f"FOUND {data_dict['title']} -> {data_dict['result']}")
         self.play_alert()
         webbrowser.open(data_dict["link"])
-        req_checker.stop()
-        sel_checker.stop()
+        self.req_checker.stop()
+        self.sel_checker.stop()
 
     def update_regions(self, garbage):
         self.getter.clear_regions()
@@ -531,29 +545,37 @@ class GUI():
             if box.isChecked():
                 self.getter.add_product(name)
 
-    def start_checking(self):
-        if self.getter.regions == []:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setWindowTitle("Missing Regions")
-            msg.setText("Please select at least one region.")
-            msg.exec()
-            return
+    def btn_function(self):
+        if self.start_stop_btn.text() == "Stop":
+            self.start_stop_btn.setText("Start")
 
-        elif self.getter.products == []:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setWindowTitle("Missing Products")
-            msg.setText("Please select at least one product.")
-            msg.exec()
-            return
+            self.req_checker.stop()
+            self.sel_checker.stop()
 
-        self.start_btn.setText("Stop")
-        self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log)
-        self.req_checker.start()
+        else:
+            if self.getter.regions == []:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Missing Regions")
+                msg.setText("Please select at least one region.")
+                msg.exec()
+                return
 
-        self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log)
-        self.sel_checker.start()
+            elif self.getter.products == []:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Missing Products")
+                msg.setText("Please select at least one product.")
+                msg.exec()
+                return
+
+            self.start_stop_btn.setText("Stop")
+
+            self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log)
+            self.req_checker.start()
+
+            self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log)
+            self.sel_checker.start()
 
     def main_window(self):
         self.main = QWidget()
@@ -576,7 +598,7 @@ class GUI():
 
         self.main_layout.addWidget(self.region_box, 0, 0)
 
-        self.log_box = QLabel()
+        self.log_box = QLabel(text="Welcome.\n\nPlease select at least one region\nand one product. After that, press start.")
         self.log_box.setGeometry(QRect(0, 0, 250, 100))
         self.main_layout.addWidget(self.log_box, 0, 1)
 
@@ -595,10 +617,9 @@ class GUI():
 
         self.main_layout.addWidget(self.product_box, 0, 2)
 
-        self.start_btn = QPushButton(text="Start")
-        self.start_btn.clicked.connect(self.start_checking)
-        self.start_btn.setGeometry(QRect(0, 0, 50, 25))
-        self.main_layout.addWidget(self.start_btn, 1, 1)
+        self.start_stop_btn = QPushButton(text="Start")
+        self.start_stop_btn.clicked.connect(self.btn_function)
+        self.main_layout.addWidget(self.start_stop_btn, 1, 1)
 
         self.main.setLayout(self.main_layout)
         self.main.show()
