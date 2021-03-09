@@ -617,12 +617,27 @@ class GUI():
 
         self.main_layout.addWidget(self.product_box, 0, 2)
 
+        self.settings_btn = QPushButton(text="Settings")
+        self.settings_btn.clicked.connect(self.settings_menu)
+        self.main_layout.addWidget(self.settings_btn, 1, 0)
+
         self.start_stop_btn = QPushButton(text="Start")
         self.start_stop_btn.clicked.connect(self.btn_function)
         self.main_layout.addWidget(self.start_stop_btn, 1, 1)
 
+        self.github_btn = QPushButton(text="Open on GitHub")
+        self.github_btn.clicked.connect(self.open_github_page)
+        self.main_layout.addWidget(self.github_btn, 1, 2)
+
         self.main.setLayout(self.main_layout)
         self.main.show()
+
+    def settings_menu(self):
+        self.settings = QWidget(self.main)
+        #TODO Make settings menu
+
+    def open_github_page(self):
+        webbrowser.open("https://github.com/ToasterUwU/anti-scalp")
 
 gui = GUI()
 
