@@ -15,9 +15,12 @@ import playsound
 import requests
 from bs4 import BeautifulSoup
 from PyQt5.QtCore import QRect
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QGridLayout, QGroupBox,
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout, QGroupBox,
                              QLabel, QMessageBox, QPushButton, QWidget)
 from selenium import webdriver
+
+
+VERISON = "0.1"
 
 
 class utility():
@@ -496,88 +499,6 @@ class GUI():
         self.app = QApplication(sys.argv)
         self.msgs = []
 
-    def mainloop(self):
-        self.app.exec()
-
-    def play_sound(self):
-        mp3_exists = os.path.exists("alert.mp3")
-        wav_exists = os.path.exists("alert.wav")
-        if not mp3_exists and not wav_exists:
-            playsound.playsound("standard_alert.mp3", block=False)
-        else:
-            if mp3_exists:
-                playsound.playsound("alert.mp3", block=False)
-            else:
-                playsound.playsound("alert.wav", block=False)
-
-    def change_sound():
-        filename = fd.askopenfilename(filetypes=[("Sounds", "*.mp3 *.wav")])
-        shutil.copy2(filename, "sound."+filename.rsplit(".", 1)[1])
-
-    def reset_sound():
-        if os.path.exists("sound.mp3"):
-            os.remove("sound.mp3")
-        if os.path.exists("sound.wav"):
-            os.remove("sound.wav")
-
-    def log(self, msg):
-        self.msgs = self.msgs[-9:]
-        self.msgs.append(msg)
-        self.log_box.setText("\n".join(self.msgs))
-
-    def alert(self, data_dict:dict):
-        self.msg_box_var.set(self.msg_box_var.get()+"\n"+f"FOUND {data_dict['title']} -> {data_dict['result']}")
-        print(f"FOUND {data_dict['title']} -> {data_dict['result']}")
-        self.play_alert()
-        webbrowser.open(data_dict["link"])
-        self.req_checker.stop()
-        self.sel_checker.stop()
-
-    def update_regions(self, garbage):
-        self.getter.clear_regions()
-        for name, box in self.region_check_boxes.items():
-            if box.isChecked():
-                self.getter.add_region(name)
-
-    def update_products(self, garbage):
-        self.getter.clear_products()
-        for name, box in self.product_check_boxes.items():
-            if box.isChecked():
-                self.getter.add_product(name)
-
-    def btn_function(self):
-        if self.start_stop_btn.text() == "Stop":
-            self.start_stop_btn.setText("Start")
-
-            self.req_checker.stop()
-            self.sel_checker.stop()
-
-        else:
-            if self.getter.regions == []:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Critical)
-                msg.setWindowTitle("Missing Regions")
-                msg.setText("Please select at least one region.")
-                msg.exec()
-                return
-
-            elif self.getter.products == []:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Critical)
-                msg.setWindowTitle("Missing Products")
-                msg.setText("Please select at least one product.")
-                msg.exec()
-                return
-
-            self.start_stop_btn.setText("Stop")
-
-            self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log)
-            self.req_checker.start()
-
-            self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log)
-            self.sel_checker.start()
-
-    def main_window(self):
         self.main = QWidget()
         self.main.setWindowTitle("Anti Scalp")
         self.main_layout = QGridLayout()
@@ -632,14 +553,157 @@ class GUI():
         self.main.setLayout(self.main_layout)
         self.main.show()
 
+
+        self.settings = QWidget()
+        self.settings.setWindowTitle("Settings")
+
+        self.settings_layout = QGridLayout()
+
+        self.setting_play_sound = QCheckBox(text="Notification Sound")
+        self.setting_play_sound.setChecked(True)
+        self.settings_layout.addWidget(self.setting_play_sound, 0, 0)
+
+        self.setting_use_selenium = QCheckBox(text="Use hidden Browsers (CPU intensive)")
+        self.setting_use_selenium.setChecked(True)
+        self.settings_layout.addWidget(self.setting_use_selenium, 1, 0)
+
+        self.setting_change_sound = QPushButton(text="Change Sound")
+        self.setting_change_sound.clicked.connect(self.change_sound)
+        self.settings_layout.addWidget(self.setting_change_sound, 2, 0)
+
+        self.setting_reset_sound = QPushButton(text="Reset to standard Sound")
+        self.setting_reset_sound.clicked.connect(self.reset_sound)
+        self.settings_layout.addWidget(self.setting_reset_sound, 3, 0)
+
+        self.setting_open_links_folder = QPushButton(text="Open links folder")
+        self.setting_open_links_folder.clicked.connect(self.open_links_folder)
+        self.settings_layout.addWidget(self.setting_open_links_folder)
+
+        #TODO Add "Links per Browser" and "Links per Requester"
+
+        self.setting_test_sound = QPushButton(text="Test - Sound")
+        self.setting_test_sound.clicked.connect(self.play_sound)
+        self.settings_layout.addWidget(self.setting_test_sound, 0, 1)
+
+        self.setting_test_browser = QPushButton(text="Test - Open Link")
+        self.setting_test_browser.clicked.connect(self.open_github_page)
+        self.settings_layout.addWidget(self.setting_test_browser, 1, 1)
+
+        self.settings.setLayout(self.settings_layout)
+
+        self.check_update()
+
+    def mainloop(self):
+        self.app.exec()
+
+    def check_update(self):
+        def pressed_ok(i):
+            webbrowser.open("https://github.com/ToasterUwU/Anti-Scalp/releases/latest")
+
+        response = requests.get("https://api.github.com/repos/ToasterUwU/Anti-Scalp/releases")
+        response = response.json()
+        try:
+            newest_ver = response[0]["tag_name"]
+        except:
+            return
+
+        if VERISON != newest_ver:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("New Version")
+            msg.setText(f"There is a new version of Anti-Scalp.\n\nCurrent: {VERISON}\nNewest: {newest_ver}")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(pressed_ok)
+            msg.show()
+
+    def play_sound(self):
+        mp3_exists = os.path.exists("alert.mp3")
+        wav_exists = os.path.exists("alert.wav")
+        if not mp3_exists and not wav_exists:
+            playsound.playsound("standard_alert.mp3", block=False)
+        else:
+            if mp3_exists:
+                playsound.playsound("alert.mp3", block=False)
+            else:
+                playsound.playsound("alert.wav", block=False)
+
+    def change_sound(self):
+        filename = QFileDialog().getOpenFileName(filter="*.mp3 *.wav")[0]
+        shutil.copy2(filename, "alert."+filename.rsplit(".", 1)[1])
+
+    def reset_sound(self):
+        if os.path.exists("alert.mp3"):
+            os.remove("alert.mp3")
+        if os.path.exists("alert.wav"):
+            os.remove("alert.wav")
+
+    def log(self, msg):
+        self.msgs = self.msgs[-9:]
+        self.msgs.append(msg)
+        self.log_box.setText("\n".join(self.msgs))
+
+    def alert(self, data_dict:dict):
+        self.log(f"FOUND {data_dict['title']} -> {data_dict['result']}".replace("\n", ""))
+        if self.setting_play_sound.isChecked():
+            self.play_sound()
+        webbrowser.open(data_dict["link"])
+        self.req_checker.stop()
+        self.sel_checker.stop()
+        self.start_stop_btn.setText("Start")
+
+    def update_regions(self):
+        self.getter.clear_regions()
+        for name, box in self.region_check_boxes.items():
+            if box.isChecked():
+                self.getter.add_region(name)
+
+    def update_products(self):
+        self.getter.clear_products()
+        for name, box in self.product_check_boxes.items():
+            if box.isChecked():
+                self.getter.add_product(name)
+
+    def btn_function(self):
+        if self.start_stop_btn.text() == "Stop":
+            self.start_stop_btn.setText("Start")
+
+            self.req_checker.stop()
+            self.sel_checker.stop()
+
+        else:
+            if self.getter.regions == []:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Missing Regions")
+                msg.setText("Please select at least one region.")
+                msg.exec()
+                return
+
+            elif self.getter.products == []:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Missing Products")
+                msg.setText("Please select at least one product.")
+                msg.exec()
+                return
+
+            self.start_stop_btn.setText("Stop")
+
+            self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log)
+            self.req_checker.start()
+
+            self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log)
+            if self.setting_use_selenium.isChecked():
+                self.sel_checker.start()
+
     def settings_menu(self):
-        self.settings = QWidget(self.main)
-        #TODO Make settings menu
+        self.settings.show()
 
     def open_github_page(self):
-        webbrowser.open("https://github.com/ToasterUwU/anti-scalp")
+        webbrowser.open("https://github.com/ToasterUwU/Anti-Scalp")
+
+    def open_links_folder(self):
+        webbrowser.open(__file__.replace("\\", "/").rsplit("/", 1)[0]+"/links")
 
 gui = GUI()
-
-gui.main_window()
 gui.mainloop()

@@ -29,5 +29,10 @@
         "buyable": "#basketButton",
         "price": "div.article_details_price strong",
         "requests": true
+    },
+    "newegg": {
+        "buyable": ".qty-box-input",
+        "price": ".price-current strong",
+        "requests": true
     }
 }

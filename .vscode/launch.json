@@ -8,7 +8,7 @@
             "name": "Anti Scalp",
             "type": "python",
             "request": "launch",
-            "program": "anti-scalp.py",
+            "program": "anti-scalp.pyw",
             "console": "integratedTerminal"
         },
         {
