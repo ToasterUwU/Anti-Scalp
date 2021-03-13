@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout, 
                              QLabel, QMessageBox, QPushButton, QSlider, QWidget)
 from selenium import webdriver
 
-
+PATH = __file__.replace("\\", "/").rsplit("/", 1)[0]
 VERISON = "0.1"
 
 def error_out(msg):
@@ -31,10 +31,10 @@ def error_out(msg):
     msg_box.exec()
     sys.exit(0)
 
-if not os.path.exists("selectors.json"):
+if not os.path.exists(PATH+"selectors.json"):
     error_out("Missing 'selectors.json' config file.")
 
-if not os.path.exists("links/"):
+if not os.path.exists(PATH+"links/"):
     error_out("Missing 'links' folder.")
 
 class utility():
@@ -397,9 +397,9 @@ class Link_Getter():
             self.selectors = json.load(f)
 
         self.all_links = {}
-        for folder in os.listdir("links/"):
-            for txt in os.listdir("links/"+folder+"/"):
-                with open("links/"+folder+"/"+txt, "r") as f:
+        for folder in os.listdir(PATH+"links/"):
+            for txt in os.listdir(PATH+"links/"+folder+"/"):
+                with open(PATH+"links/"+folder+"/"+txt, "r") as f:
                     lines = f.readlines()
 
                 while "\n" in lines:

@@ -57,8 +57,10 @@ Everyone should be able to use it just fine.
   - Instead of downloading the installer, you download the linux.zip file
   - Unpack the zip
   - Open a console in the folder of Anti-Scalp
-  - "pip3 install -r requirements.txt"
-  - "python3 anti-scalp.py"
+  - "sudo apt install firefox-geckodriver"
+  - "sudo apt install python3-pip"
+  - "sudo pip3 install -r requirements.txt"
+  - "sudo python3 anti-scalp.py"
   - Now proceed with the Windows steps, starting at 'Click the "settings" button'
 
 In case you see a message like "Removed ***shopname*** link, ***shopname*** isnt supported. Please add it to the configuration":
