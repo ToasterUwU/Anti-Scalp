@@ -14,9 +14,9 @@ from typing import Callable, Iterable
 import playsound
 import requests
 from bs4 import BeautifulSoup
-from PyQt5.QtCore import QRect
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout, QGroupBox,
-                             QLabel, QMessageBox, QPushButton, QWidget)
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout, QGroupBox, QInputDialog,
+                             QLabel, QMessageBox, QPushButton, QSlider, QWidget)
 from selenium import webdriver
 
 
@@ -579,8 +579,6 @@ class GUI():
         self.setting_open_links_folder.clicked.connect(self.open_links_folder)
         self.settings_layout.addWidget(self.setting_open_links_folder)
 
-        #TODO Add "Links per Browser" and "Links per Requester"
-
         self.setting_test_sound = QPushButton(text="Test - Sound")
         self.setting_test_sound.clicked.connect(self.play_sound)
         self.settings_layout.addWidget(self.setting_test_sound, 0, 1)
@@ -588,6 +586,26 @@ class GUI():
         self.setting_test_browser = QPushButton(text="Test - Open Link")
         self.setting_test_browser.clicked.connect(self.open_github_page)
         self.settings_layout.addWidget(self.setting_test_browser, 1, 1)
+
+        self.links_per_b_label = QLabel()
+        self.settings_layout.addWidget(self.links_per_b_label, 2, 1)
+
+        self.setting_links_per_b = QSlider(Qt.Horizontal)
+        self.setting_links_per_b.valueChanged[int].connect(lambda i: self.links_per_b_label.setText(f"Links per Browser: {i}"))
+        self.setting_links_per_b.setMinimum(1)
+        self.setting_links_per_b.setMaximum(50)
+        self.setting_links_per_b.setValue(10)
+        self.settings_layout.addWidget(self.setting_links_per_b, 3, 1)
+
+        self.links_per_r_label = QLabel()
+        self.settings_layout.addWidget(self.links_per_r_label, 4, 1)
+
+        self.setting_links_per_r = QSlider(Qt.Horizontal)
+        self.setting_links_per_r.valueChanged[int].connect(lambda i: self.links_per_r_label.setText(f"Links per Requester: {i}"))
+        self.setting_links_per_r.setMinimum(1)
+        self.setting_links_per_r.setMaximum(100)
+        self.setting_links_per_r.setValue(20)
+        self.settings_layout.addWidget(self.setting_links_per_r, 5, 1)
 
         self.settings.setLayout(self.settings_layout)
 
@@ -689,11 +707,11 @@ class GUI():
 
             self.start_stop_btn.setText("Stop")
 
-            self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log)
+            self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log, links_per_instance=self.setting_links_per_r.value())
             self.req_checker.start()
 
-            self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log)
             if self.setting_use_selenium.isChecked():
+                self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log, links_per_instance=self.setting_links_per_b.value())
                 self.sel_checker.start()
 
     def settings_menu(self):
