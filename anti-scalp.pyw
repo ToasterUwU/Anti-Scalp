@@ -22,6 +22,20 @@ from selenium import webdriver
 
 VERISON = "0.1"
 
+def error_out(msg):
+    app = QApplication(sys.argv)
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Critical)
+    msg_box.setWindowTitle("Error")
+    msg_box.setText(msg)
+    msg_box.exec()
+    sys.exit(0)
+
+if not os.path.exists("selectors.json"):
+    error_out("Missing 'selectors.json' config file.")
+
+if not os.path.exists("links/"):
+    error_out("Missing 'links' folder.")
 
 class utility():
     def evenly_chunk(items:Iterable, max_chunk_size:int=20):
