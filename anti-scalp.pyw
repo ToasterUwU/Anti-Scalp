@@ -1,8 +1,10 @@
+import functools
 import json
 import math
 import os
 import re
 import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -15,12 +17,23 @@ import playsound
 import requests
 from bs4 import BeautifulSoup
 from PyQt5.QtCore import QRect, Qt
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout, QGroupBox, QInputDialog,
-                             QLabel, QMessageBox, QPushButton, QSlider, QWidget)
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout,
+                             QGroupBox, QInputDialog, QLabel, QMessageBox,
+                             QPushButton, QSlider, QWidget)
 from selenium import webdriver
 
-PATH = __file__.replace("\\", "/").rsplit("/", 1)[0]
-VERISON = "0.1"
+# Workaround for webdriver consoles poping up
+flag = 0x08000000  # No-Window flag
+webdriver.common.service.subprocess.Popen = functools.partial(subprocess.Popen, creationflags=flag)
+
+# Workaround for .pyw or .exe behavior
+if not "python" in sys.executable.lower():
+    PATH = sys.executable.replace("\\", "/").rsplit("/", 1)[0]+"/"
+else:
+    PATH = os.getcwd().replace("\\", "/")+"/"
+
+VERISON = "1.0"
 
 def error_out(msg):
     app = QApplication(sys.argv)
@@ -513,8 +526,15 @@ class GUI():
         self.app = QApplication(sys.argv)
         self.msgs = []
 
+        icon = QIcon()
+        try:
+            icon.addFile(PATH+"icon.ico")
+        except:
+            pass
+
         self.main = QWidget()
         self.main.setWindowTitle("Anti Scalp")
+        self.main.setWindowIcon(icon)
         self.main_layout = QGridLayout()
 
         regions = self.getter.all_regions()
@@ -570,7 +590,7 @@ class GUI():
 
         self.settings = QWidget()
         self.settings.setWindowTitle("Settings")
-
+        self.settings.setWindowIcon(icon)
         self.settings_layout = QGridLayout()
 
         self.setting_play_sound = QCheckBox(text="Notification Sound")
@@ -661,13 +681,13 @@ class GUI():
 
     def change_sound(self):
         filename = QFileDialog().getOpenFileName(filter="*.mp3 *.wav")[0]
-        shutil.copy2(filename, "alert."+filename.rsplit(".", 1)[1])
+        shutil.copy2(PATH+filename, PATH+"alert."+filename.rsplit(".", 1)[1])
 
     def reset_sound(self):
-        if os.path.exists("alert.mp3"):
-            os.remove("alert.mp3")
-        if os.path.exists("alert.wav"):
-            os.remove("alert.wav")
+        if os.path.exists(PATH+"alert.mp3"):
+            os.remove(PATH+"alert.mp3")
+        if os.path.exists(PATH+"alert.wav"):
+            os.remove(PATH+"alert.wav")
 
     def log(self, msg):
         self.msgs = self.msgs[-9:]
