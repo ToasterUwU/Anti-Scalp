@@ -43,23 +43,23 @@ Everyone should be able to use it just fine.
 ## How to use
 
 - Windows:
-  1. Download the installer from the [releases page](https://github.com/ToasterUwU/Anti-Scalp/releases/latest)
-  2. Open the installer, install Anti-Scalp
-  3. Open Anti-Scalp
-  4. Click the "settings" button
-  5. click "Open links folder"
-  6. In the now opened folder, add folders for the regions you want (Germany, England, USA, Fantasy Land)
-  7. In the region folders you can now make .txt files for the products and put all the links in it (RTX 3080, Ryzen 5000 Series)
-  8. After adding your region(s) and the product(s) you want, you have to restart the program
-  9. After restarting you just tick the boxes you want to monitor
-  10. Click start and see the magic happen
+  - Download the installer from the [releases page](https://github.com/ToasterUwU/Anti-Scalp/releases/latest)
+  - Open the installer, install Anti-Scalp
+  - Open Anti-Scalp
+  - Click the "settings" button
+  - click "Open links folder"
+  - In the now opened folder, add folders for the regions you want (Germany, England, USA, Fantasy Land)
+  - In the region folders you can now make .txt files for the products and put all the links in it (RTX 3080, Ryzen 5000 Series)
+  - After adding your region(s) and the product(s) you want, you have to restart the program
+  - After restarting you just tick the boxes you want to monitor
+  - Click start and see the magic happen
 - Linux:
-  1. Instead of downloading the installer, you download the linux.zip file
-  2. Unpack the zip
-  3. Open a console in the folder of Anti-Scalp
-  4. "pip3 install -r requirements.txt"
-  5. "python3 anti-scalp.py"
-  6. Now proceed with the Windows steps, starting at number 4
+  - Instead of downloading the installer, you download the linux.zip file
+  - Unpack the zip
+  - Open a console in the folder of Anti-Scalp
+  - "pip3 install -r requirements.txt"
+  - "python3 anti-scalp.py"
+  - Now proceed with the Windows steps, starting at 'Click the "settings" button'
 
 In case you see a message like "Removed ***shopname*** link, ***shopname*** isnt supported. Please add it to the configuration":
 
