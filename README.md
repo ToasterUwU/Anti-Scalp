@@ -72,6 +72,12 @@ I will add the configuration for that shop. Im planning on making the process au
 
 <br>
 
+## Help and Support
+
+If you need any help with using Anti-Scalp, join the [discord server](https://discord.gg/BFBY5qxu8d). Im happy to help.
+
+<br>
+
 ## What comes in the future
 
 - [ ] Easier way to add links then making a .txt file in a folder
