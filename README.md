@@ -84,6 +84,8 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 
 - [ ] Autoupdate selectors.json
 - [ ] Tutorial video for the ones that are not so good with tech
+- [ ] Average price checker
+- [ ] Price history checker
 - [ ] Easier way to add links then making a .txt file in a folder
 - [ ] Alternative ways of notification from sound and opening (For example: Discord Webhooks, SMS, Email)
 - [ ] Auto configuration for new shops
