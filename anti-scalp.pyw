@@ -11,7 +11,7 @@ import time
 import webbrowser
 from difflib import SequenceMatcher
 from itertools import cycle
-from typing import Callable, Iterable, List
+from typing import Callable, Iterable
 
 import playsound
 import requests
@@ -110,7 +110,7 @@ class Broswer():
                     self.options.headless = headless
                     if bin_path:
                         self.options.binary_location = bin_path
-                    test_driver = webdriver.Firefox(options=self.options)
+                    test_driver = webdriver.Firefox(options=self.options, service_log_path=os.devnull)
                 except:
                     if not chrome_failed:
                         self.browser = "chrome"
@@ -196,7 +196,7 @@ class Broswer():
             profile = webdriver.FirefoxProfile()
             profile.set_preference("permissions.default.image", 2)
 
-            self.driver = webdriver.Firefox(options=self.options, firefox_profile=profile)
+            self.driver = webdriver.Firefox(options=self.options, firefox_profile=profile, service_log_path=os.devnull)
 
         elif self.browser == "chrome":
             chrome_prefs = {}
@@ -699,8 +699,11 @@ class GUI():
                 playsound.playsound("alert.wav", block=False)
 
     def change_sound(self):
-        filename = QFileDialog().getOpenFileName(filter="*.mp3 *.wav")[0]
-        shutil.copy2(PATH+filename, PATH+"alert."+filename.rsplit(".", 1)[1])
+        try:
+            filename = QFileDialog().getOpenFileName(filter="*.mp3 *.wav")[0]
+            shutil.copy2(PATH+filename, PATH+"alert."+filename.rsplit(".", 1)[1])
+        except:
+            pass
 
     def reset_sound(self):
         if os.path.exists(PATH+"alert.mp3"):
@@ -732,6 +735,7 @@ class GUI():
         for name, p_box in self.product_check_boxes.items():
             if name not in ap:
                 p_box.setDisabled(True)
+                p_box.setChecked(False)
             else:
                 p_box.setDisabled(False)
 
@@ -781,7 +785,7 @@ class GUI():
         webbrowser.open("https://github.com/ToasterUwU/Anti-Scalp")
 
     def open_links_folder(self):
-        webbrowser.open(__file__.replace("\\", "/").rsplit("/", 1)[0]+"/links")
+        webbrowser.open(PATH+"/links")
 
 gui = GUI()
 gui.mainloop()
