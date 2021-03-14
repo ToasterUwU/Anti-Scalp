@@ -11,7 +11,7 @@ import time
 import webbrowser
 from difflib import SequenceMatcher
 from itertools import cycle
-from typing import Callable, Iterable
+from typing import Callable, Iterable, List
 
 import playsound
 import requests
@@ -19,8 +19,8 @@ from bs4 import BeautifulSoup
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout,
-                             QGroupBox, QInputDialog, QLabel, QMessageBox,
-                             QPushButton, QSlider, QWidget)
+                             QGroupBox, QLabel, QMessageBox, QPushButton,
+                             QSlider, QWidget)
 from selenium import webdriver
 
 # Workaround for webdriver consoles poping up
@@ -477,6 +477,15 @@ class Link_Getter():
                     all_products.append(p)
         return all_products
 
+    def available_products(self):
+        products = []
+        for region in self.all_links:
+            if region in self.regions:
+                for product in self.all_links[region]:
+                    if product not in products:
+                        products.append(product)
+        return products
+
     def get_all_links(self):
         links = []
         for region in self.all_links:
@@ -486,6 +495,13 @@ class Link_Getter():
                         links.extend(self.all_links[region][p])
 
         return links
+
+    def format_link(self, shop, link):
+        if shop in self.selectors:
+            if "add_to_link" in self.selectors[shop]:
+                if self.selectors[shop]["add_to_link"] not in link:
+                    link = link + self.selectors[shop]["add_to_link"]
+        return link
 
     def get_selenium_links(self):
         banned_shops = []
@@ -499,6 +515,7 @@ class Link_Getter():
         for link in links:
             shop = utility.shopname(link)
             if shop not in banned_shops:
+                link = self.format_link(shop, link)
                 new_links.append(link)
 
         return new_links
@@ -515,6 +532,7 @@ class Link_Getter():
         for link in links:
             shop = utility.shopname(link)
             if shop not in banned_shops:
+                link = self.format_link(shop, link)
                 new_links.append(link)
 
         return new_links
@@ -565,8 +583,9 @@ class GUI():
         row = 0
         self.product_check_boxes = {}
         for p in products:
-            self.product_check_boxes[p] = QCheckBox(text=p.upper())
+            self.product_check_boxes[p] = QCheckBox(text=p.capitalize())
             self.product_check_boxes[p].stateChanged.connect(self.update_products)
+            self.product_check_boxes[p].setDisabled(True)
             self.product_grid.addWidget(self.product_check_boxes[p], row, 0)
             row += 1
 
@@ -708,6 +727,13 @@ class GUI():
         for name, box in self.region_check_boxes.items():
             if box.isChecked():
                 self.getter.add_region(name)
+
+        ap = self.getter.available_products()
+        for name, p_box in self.product_check_boxes.items():
+            if name not in ap:
+                p_box.setDisabled(True)
+            else:
+                p_box.setDisabled(False)
 
     def update_products(self):
         self.getter.clear_products()

@@ -34,5 +34,11 @@
         "buyable": ".qty-box-input",
         "price": ".price-current strong",
         "requests": true
+    },
+    "bestbuy": {
+        "buyable": ":not(.btn-disabled).add-to-cart-button",
+        "price": ".priceView-customer-price span",
+        "requests": true,
+        "add_to_link": "&intl=nosplash"
     }
 }
