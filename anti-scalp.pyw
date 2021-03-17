@@ -33,7 +33,7 @@ if not "python" in sys.executable.lower():
 else:
     PATH = os.getcwd().replace("\\", "/")+"/"
 
-VERISON = "1.0"
+VERISON = "1.0.1"
 
 def error_out(msg):
     app = QApplication(sys.argv)
@@ -686,6 +686,7 @@ class GUI():
             msg.setStandardButtons(QMessageBox.Ok)
             msg.buttonClicked.connect(pressed_ok)
             msg.show()
+            self.update_message = msg
 
     def play_sound(self):
         mp3_exists = os.path.exists("alert.mp3")
