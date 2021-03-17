@@ -1,4 +1,25 @@
-# Anti Scalp
+<img src="icon.ico" style="width: 100px">
+
+# Anti Scalp - A Stock-Checker for everyone
+
+## The difference to other Stock-Checkers
+
+- Runs on your PC, not on a Server you set up
+- Designed and programmed with everyone in mind, not only people that know how to use a terminal
+- Doesnt notify you somewhere and lets your reaction time decide when you open the link, but instead opens the link instantly in your standard browser for you
+- Easy to extend
+- Notifys you about updates
+- Has a graphical interface
+
+So basically: This tool isnt for informing a big group of people (like a Discord Server), but for personal use. And it definitely is better for personal use then all Stock-Checkers i saw.
+
+Screenshots:
+
+<img src="pics/main-window.png" style="width: 75%">
+<img src="pics/settings.png" style="width: 50%">
+
+<br>
+<br>
 
 ## What is this?
 
@@ -11,6 +32,8 @@ Do you finally want to play games on a PS 5, months after it was released?
 Do you wanna wear those nice Nike sneakers that you can only buy second hand for double of the original price?
 
 Me too man..
+
+
 
 <br>
 
@@ -32,7 +55,7 @@ Thats it, the program will now check the links over and over, as fast as possibl
 ## What my focus is
 
 This program is supposed to be the answer for people that need GPUs for Gaming and/or their job.
-But this can also be used for basically everything. You can also check for CPUs, Sneakers, Lego Sets etc.
+But this can also be used for basically everything. You can also check for CPUs, Sneakers, Lego Sets, Bananas, Air Pods etc.
 
 So my focus was to make it easy to use, reliable, easy to configure and extendable.
 
@@ -49,7 +72,7 @@ Everyone should be able to use it just fine.
   - Click the "settings" button
   - click "Open links folder"
   - In the now opened folder, add folders for the regions you want (Germany, England, USA, Fantasy Land)
-  - In the region folders you can now make .txt files for the products and put all the links in it (RTX 3080, Ryzen 5000 Series)
+  - In the region folders you can now make .txt files for the products and put all the links in it (RTX 3080, Ryzen 5000 Series). You can use the Germany folder as an example
   - After adding your region(s) and the product(s) you want, you have to restart the program
   - After restarting you just tick the boxes you want to monitor
   - Click start and see the magic happen
@@ -84,8 +107,10 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 
 - [ ] Autoupdate selectors.json
 - [ ] Tutorial video for the ones that are not so good with tech
+- [ ] Only notify under specific price (Will sort out moon prices)
 - [ ] Average price checker
 - [ ] Price history checker
+- [ ] Automatically add product to card
 - [ ] Easier way to add links then making a .txt file in a folder
 - [ ] Alternative ways of notification from sound and opening (For example: Discord Webhooks, SMS, Email)
 - [ ] Auto configuration for new shops
@@ -96,3 +121,13 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 ## Credits
 
 Standard Alert Sound: https://soundbible.com/2155-Text-Message-Alert-2.html
+
+<br>
+
+## Support me
+
+I dont really want money for this, im happy if people like it and share it, but if you want, you can send me some ETH or BTC. (I will spend it on pizza and ice cream)
+
+BTC: bc1qmnmhdyhkvdyhsrgjl8tdjmjchcsgxwzd593gej
+
+ETH: 0x009167F0987B45a2Ab58075d283B11314fBE8AC5
