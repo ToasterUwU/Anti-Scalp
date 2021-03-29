@@ -88,7 +88,7 @@ Everyone should be able to use it just fine.
 
 In case you see a message like "Removed ***shopname*** link, ***shopname*** isnt supported. Please add it to the configuration":
 
-- Join the [discord server](https://discord.gg/BFBY5qxu8d)
+- Join the [discord server](https://discord.gg/76ZAefBcC4)
 - Tell me what shop you want to have added in the config
 - Send me a link of a product that is sold out and one link of something that is always in stock
 - Send me the selectors.json file in the directory of the anti-scalp executable
@@ -99,7 +99,7 @@ I will add the configuration for that shop. Im planning on making the process au
 
 ## Help and Support
 
-If you need any help with using Anti-Scalp, join the [discord server](https://discord.gg/BFBY5qxu8d). Im happy to help.
+If you need any help with using Anti-Scalp, join the [discord server](https://discord.gg/76ZAefBcC4). Im happy to help.
 
 <br>
 
