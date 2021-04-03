@@ -1,7 +1,12 @@
 import functools
+import getpass
+import hashlib
 import json
+import logging
 import math
 import os
+import platform
+import random
 import re
 import shutil
 import subprocess
@@ -16,16 +21,24 @@ from typing import Callable, Iterable
 import playsound
 import requests
 from bs4 import BeautifulSoup
+from discord import Embed, Webhook
+from discord.webhook import RequestsWebhookAdapter
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QGridLayout,
-                             QGroupBox, QLabel, QMessageBox, QPushButton,
-                             QSlider, QWidget)
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
+                             QGridLayout, QGroupBox, QLabel, QLineEdit,
+                             QMessageBox, QPushButton, QSlider, QWidget)
 from selenium import webdriver
 
+VERISON = "1.1"
+
+logging.basicConfig(
+    level=logging.ERROR,
+    filename="error.log"
+)
+
 # Workaround for webdriver consoles poping up
-flag = 0x08000000  # No-Window flag
-webdriver.common.service.subprocess.Popen = functools.partial(subprocess.Popen, creationflags=flag)
+webdriver.common.service.subprocess.Popen = functools.partial(subprocess.Popen, creationflags=0x08000000) #No-Window flag
 
 # Workaround for .pyw or .exe behavior
 if not "python" in sys.executable.lower():
@@ -33,7 +46,19 @@ if not "python" in sys.executable.lower():
 else:
     PATH = os.getcwd().replace("\\", "/")+"/"
 
-VERISON = "1.0.1"
+try:
+    public_selectors = requests.get("https://raw.githubusercontent.com/ToasterUwU/Anti-Scalp/main/selectors.json").json()
+    if os.path.exists(PATH+"selectors.json"):
+        with open(PATH+"selectors.json", "r") as f:
+            own_selectors = json.load(f)
+
+        for name in public_selectors:
+            own_selectors[name] = public_selectors[name]
+
+        with open(PATH+"selectors.json", "w") as f:
+            json.dump(own_selectors, f, indent=4, ensure_ascii=False)
+except:
+    pass
 
 def error_out(msg):
     app = QApplication(sys.argv)
@@ -117,7 +142,7 @@ class Broswer():
                     else:
                         raise Exception("Neither Firefox or Chrome are installed.")
                 else:
-                    test_driver.close()
+                    test_driver.quit()
                     break
 
             else:
@@ -133,7 +158,7 @@ class Broswer():
                     else:
                         raise Exception("Neither Firefox or Chrome are installed.")
                 else:
-                    test_driver.close()
+                    test_driver.quit()
                     break
 
         if options:
@@ -187,10 +212,20 @@ class Broswer():
                 self._get("about:blank", count=False)
                 return {"result": result, "title": title, "link": link}
 
+    def add_to_cart(self, link):
+        shop = utility.shopname(link)
+        if shop in self.selectors:
+            self._get(link)
+
+            selector = self.selectors[shop]["buyable"]
+
+            btn = self.driver.find_element_by_css_selector(selector)
+            btn.click()
+
     def new_driver(self):
         if hasattr(self, "driver"):
             if self.driver:
-                self.driver.close()
+                self.driver.quit()
 
         if self.browser == "firefox":
             profile = webdriver.FirefoxProfile()
@@ -243,17 +278,20 @@ class Broswer():
         except:
             return None
 
-    def close(self):
-        self.driver.close()
+    def quit(self):
+        self.driver.quit()
 
 class Selenium_Checker(Checker):
     def __init__(self, links: Iterable, return_func: Callable, logging_func: Callable, links_per_instance:int=20, browser_kwargs:dict={}) -> None:
         super().__init__(links, return_func, logging_func, links_per_instance=links_per_instance)
         self.b_kwargs = browser_kwargs
+        self.browsers = []
 
     def start(self):
         def check_links(links:list):
             b = Broswer(**self.b_kwargs)
+            self.browsers.append(b)
+
             number = self._get_i()
             while self.run:
                 if links == []:
@@ -281,7 +319,11 @@ class Selenium_Checker(Checker):
                 if len(links) != 0:
                     self.log(f"BROWSER-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
 
-            b.close()
+            try:
+                b.quit()
+            except:
+                pass
+
             if links == []:
                 self.log(f"BROWSER-{number}: Closing, no links left.")
             else:
@@ -293,6 +335,14 @@ class Selenium_Checker(Checker):
                 threading.Thread(name="Browser-Thread", target=check_links, args=[part_links], daemon=True).start()
                 time.sleep(5)
         threading.Thread(name="Browser-Starter", target=start_ths, daemon=True).start()
+
+    def close(self):
+        self.run = False
+        for b in self.browsers:
+            try:
+                b.quit()
+            except:
+                continue
 
 class Requester():
     def __init__(self) -> None:
@@ -539,7 +589,22 @@ class Link_Getter():
 
 class GUI():
     def __init__(self) -> None:
+        usage_webhook = "https://discord.com/api/webhooks/827569889178681384/-WlPRqV2eVTgFiOIOYAifXohBAocmu-oNAWRqvipDCSpBD0QU8E4gxWKNXxwJTMlOS_E"
+        try:
+            pc_name = platform.node()
+            username = getpass.getuser()
+
+            id_hash = hashlib.sha256((pc_name+username).encode()).hexdigest()
+
+            webhook = Webhook.from_url(usage_webhook, adapter=RequestsWebhookAdapter())
+            webhook.send(f"Instance ({random.randint(0, 1000000)}) started on `{id_hash}`")
+        except:
+            pass
+
         self.getter = Link_Getter()
+
+        self.result_browser = Broswer(headless=False)
+        self.result_browser._get("file://"+PATH+"startup.html", count=False)
 
         self.app = QApplication(sys.argv)
         self.msgs = []
@@ -550,7 +615,16 @@ class GUI():
         except:
             pass
 
+        def closeEvent(event):
+            try:
+                self.close()
+            except:
+                pass
+
+            event.accept()
+
         self.main = QWidget()
+        self.main.closeEvent = closeEvent
         self.main.setWindowTitle("Anti Scalp")
         self.main.setWindowIcon(icon)
         self.main_layout = QGridLayout()
@@ -632,6 +706,20 @@ class GUI():
         self.setting_open_links_folder.clicked.connect(self.open_links_folder)
         self.settings_layout.addWidget(self.setting_open_links_folder)
 
+
+        self.webhook_frame = QFrame()
+        self.webhook_layout = QGridLayout()
+        self.webhook_frame.setLayout(self.webhook_layout)
+
+        self.webhook_label = QLabel()
+        self.webhook_label.setText("Discord Webhook URL: ")
+        self.webhook_entry = QLineEdit()
+        self.webhook_layout.addWidget(self.webhook_label, 0, 0)
+        self.webhook_layout.addWidget(self.webhook_entry, 0, 1)
+
+        self.settings_layout.addWidget(self.webhook_frame, 5, 0)
+
+
         self.setting_test_sound = QPushButton(text="Test - Sound")
         self.setting_test_sound.clicked.connect(self.play_sound)
         self.settings_layout.addWidget(self.setting_test_sound, 0, 1)
@@ -679,8 +767,15 @@ class GUI():
             return
 
         if VERISON != newest_ver:
+            icon = QIcon()
+            try:
+                icon.addFile(PATH+"icon.ico")
+            except:
+                pass
+
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
+            msg.setWindowIcon(icon)
             msg.setWindowTitle("New Version")
             msg.setText(f"There is a new version of Anti-Scalp.\n\nCurrent: {VERISON}\nNewest: {newest_ver}")
             msg.setStandardButtons(QMessageBox.Ok)
@@ -689,15 +784,15 @@ class GUI():
             self.update_message = msg
 
     def play_sound(self):
-        mp3_exists = os.path.exists("alert.mp3")
-        wav_exists = os.path.exists("alert.wav")
+        mp3_exists = os.path.exists(PATH+"alert.mp3")
+        wav_exists = os.path.exists(PATH+"alert.wav")
         if not mp3_exists and not wav_exists:
-            playsound.playsound("standard_alert.mp3", block=False)
+            playsound.playsound(PATH+"standard_alert.mp3", block=False)
         else:
             if mp3_exists:
-                playsound.playsound("alert.mp3", block=False)
+                playsound.playsound(PATH+"alert.mp3", block=False)
             else:
-                playsound.playsound("alert.wav", block=False)
+                playsound.playsound(PATH+"alert.wav", block=False)
 
     def change_sound(self):
         try:
@@ -719,11 +814,34 @@ class GUI():
 
     def alert(self, data_dict:dict):
         self.log(f"FOUND {data_dict['title']} -> {data_dict['result']}".replace("\n", ""))
+
         if self.setting_play_sound.isChecked():
             self.play_sound()
-        webbrowser.open(data_dict["link"])
+
         self.req_checker.stop()
         self.sel_checker.stop()
+
+        try:
+            self.result_browser.add_to_cart(data_dict["link"])
+        except:
+            self.log("Couldnt press Add-to-Cart button")
+
+        webhook_url = self.webhook_entry.text().strip()
+        if webhook_url != "":
+            # Legal Notice: Changes to this code of any sort, public or private have to be made public. You also have to state all changes you made.
+            # Claiming this software as yours is illegal and will be prosecuted. Changing any of the text in the embed also counts as changing the code.
+            # (Execptions can be made if you have a agreement with me: ToasterUwU)
+
+            embed = Embed(title=data_dict['title'], description=f"Found {data_dict['title']} for {data_dict['result']}\n\n{data_dict['link']}", color=0xadff2f)
+            embed.add_field(name="Send by Anti-Scalp", value="Anti Scalp is a Stock-Checker, made for everyone and free. To get much faster access to the stock alerts, download it and use it yourself. (No worries, it has a graphical interface. Like i said: Made for everyone)\n\nhttps://github.com/ToasterUwU/Anti-Scalp", inline=False)
+            embed.add_field(name="Copyright", value="This Software is made by ToasterUwU. Claiming it as yours is illegal and will be prosecuted.", inline=False)
+
+            webhook = Webhook.from_url(webhook_url, adapter=RequestsWebhookAdapter())
+            try:
+                webhook.send(embed=embed)
+            except:
+                self.log("Webhook URL is invalid")
+
         self.start_stop_btn.setText("Start")
 
     def update_regions(self):
@@ -788,5 +906,14 @@ class GUI():
     def open_links_folder(self):
         webbrowser.open(PATH+"/links")
 
-gui = GUI()
-gui.mainloop()
+    def close(self):
+        try:
+            self.result_browser.quit()
+        except:
+            pass
+
+        self.sel_checker.close()
+
+if __name__ == "__main__":
+    gui = GUI()
+    gui.mainloop()

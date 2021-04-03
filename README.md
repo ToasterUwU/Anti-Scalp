@@ -97,6 +97,27 @@ I will add the configuration for that shop. Im planning on making the process au
 
 <br>
 
+## Shops already supported
+
+- International
+  - Amazon
+- Germany
+  - Alternate
+  - Proshop
+  - Mediamarkt
+  - Saturn
+  - Caseking
+- USA
+  - Newegg
+  - Bestbuy
+- UK
+  - Currys
+  - Ebuyer
+
+If you are missing soemthing please join the [discord server](https://discord.gg/76ZAefBcC4) and tell me there.
+
+<br>
+
 ## Help and Support
 
 If you need any help with using Anti-Scalp, join the [discord server](https://discord.gg/76ZAefBcC4). Im happy to help.
@@ -105,14 +126,16 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 
 ## What comes in the future
 
-- [ ] Autoupdate selectors.json
+- [X] ~~Autoupdate selectors.json~~
+- [X] ~~Error logging for debugging~~
+- [ ] Save settings
 - [ ] Tutorial video for the ones that are not so good with tech
 - [ ] Only notify under specific price (Will sort out moon prices)
 - [ ] Average price checker
 - [ ] Price history checker
-- [ ] Automatically add product to card
+- [X] ~~Automatically add product to cart~~
 - [ ] Easier way to add links then making a .txt file in a folder
-- [ ] Alternative ways of notification from sound and opening (For example: Discord Webhooks, SMS, Email)
+- [X] ~~Alternative ways of notification from sound and opening (For example: Discord Webhooks, SMS, Email)~~ Added Discord Webhook
 - [ ] Auto configuration for new shops
 
 
@@ -126,8 +149,10 @@ Standard Alert Sound: https://soundbible.com/2155-Text-Message-Alert-2.html
 
 ## Support me
 
-I dont really want money for this, im happy if people like it and share it, but if you want, you can send me some ETH or BTC. (I will spend it on pizza and ice cream)
+I dont really want money for this, im happy if people like it, star it and share it, but if you want, you can send me some DOGE, ETH or BTC. (I will spend it on pizza and ice cream)
 
 BTC: bc1qmnmhdyhkvdyhsrgjl8tdjmjchcsgxwzd593gej
 
 ETH: 0x009167F0987B45a2Ab58075d283B11314fBE8AC5
+
+DOGE: D85p9XaiJYjWxjPVERuu9FKqzbJ9kQJhXL

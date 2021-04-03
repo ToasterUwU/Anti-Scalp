@@ -12,16 +12,16 @@
     "proshop": {
         "buyable": "button.site-btn-addToBasket-lg",
         "price": ".site-currency-attention",
-        "invalid_price": "Die Ware ist leider nicht mehr verfügbar.",
+        "invalid_price": "Die Ware ist leider nicht mehr verf�gbar.",
         "requests": true
     },
     "mediamarkt": {
-        "buyable": "#pdp-add-to-cart-button",
+        "buyable": "#pdp-add-to-cart-button:not([disabled])",
         "price": "span.Pricestyled__BrandedPriceTypo-sc-1bu146t-0.kcGTpT",
         "requests": false
     },
     "saturn": {
-        "buyable": "#pdp-add-to-cart-button",
+        "buyable": "#pdp-add-to-cart-button:not([disabled])",
         "price": "span.Pricestyled__BrandedPriceTypo-sc-1bu146t-0.bUYFGp",
         "requests": false
     },
@@ -40,5 +40,15 @@
         "price": ".priceView-customer-price span",
         "requests": true,
         "add_to_link": "&intl=nosplash"
+    },
+    "currys": {
+        "buyable": "div[data-component='add-to-basket-button-wrapper'] button",
+        "price": "strong.current[data-key='current-price']",
+        "requests": false
+    },
+    "ebuyer": {
+        "buyable": "input.button--add-to-basket",
+        "price": "div.purchase-info p.price",
+        "requests": true
     }
 }

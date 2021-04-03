@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Anti-Scalp"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.1"
 #define MyAppPublisher "ToasterUwU"
 #define MyAppURL "https://github.com/ToasterUwU/Anti-Scalp"
 #define MyAppExeName "anti-scalp.exe"
@@ -48,6 +48,7 @@ Source: "C:\Users\Aki\Desktop\anti-scalp\LICENSE"; DestDir: "{app}"; Flags: igno
 Source: "C:\Users\Aki\Desktop\anti-scalp\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Aki\Desktop\anti-scalp\selectors.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Aki\Desktop\anti-scalp\standard_alert.mp3"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Aki\Desktop\anti-scalp\startup.html"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
