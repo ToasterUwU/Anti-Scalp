@@ -12,7 +12,7 @@
     "proshop": {
         "buyable": "button.site-btn-addToBasket-lg",
         "price": ".site-currency-attention",
-        "invalid_price": "Die Ware ist leider nicht mehr verfuegbar.",
+        "invalid_price": "Die Ware ist leider nicht mehr verfügbar.",
         "requests": true
     },
     "mediamarkt": {
