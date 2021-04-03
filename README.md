@@ -93,7 +93,7 @@ In case you see a message like "Removed ***shopname*** link, ***shopname*** isnt
 - Send me a link of a product that is sold out and one link of something that is always in stock
 - Send me the selectors.json file in the directory of the anti-scalp executable
 
-I will add the configuration for that shop. Im planning on making the process automated, but its not that easy. So it will be a feature for the feature.
+I will add the configuration for that shop. Im planning on making the process automated, but its not that easy. So it will be a feature for the future.
 
 <br>
 
@@ -114,7 +114,7 @@ I will add the configuration for that shop. Im planning on making the process au
   - Currys
   - Ebuyer
 
-If you are missing soemthing please join the [discord server](https://discord.gg/76ZAefBcC4) and tell me there.
+If you are missing something please join the [discord server](https://discord.gg/76ZAefBcC4) and tell me there.
 
 <br>
 
