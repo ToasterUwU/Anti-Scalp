@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
                              QMessageBox, QPushButton, QSlider, QWidget)
 from selenium import webdriver
 
-VERISON = "1.1"
+VERISON = "1.1.1"
 
 logging.basicConfig(
     level=logging.ERROR,
