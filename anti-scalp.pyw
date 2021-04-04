@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 import webbrowser
 from difflib import SequenceMatcher
 from itertools import cycle
@@ -37,6 +38,23 @@ logging.basicConfig(
     filename="error.log"
 )
 
+def error_out(msg):
+    app = QApplication(sys.argv)
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Critical)
+    msg_box.setWindowTitle("Error")
+    msg_box.setText(msg)
+    msg_box.exec()
+    sys.exit(0)
+
+def exception_hook(exctype, value, trace):
+    traceback_formated = traceback.format_exception(exctype, value, trace)
+    traceback_string = "".join(traceback_formated)
+    logging.exception(traceback_string)
+    error_out(traceback_string)
+
+sys.excepthook = exception_hook
+
 # Workaround for webdriver consoles poping up
 webdriver.common.service.subprocess.Popen = functools.partial(subprocess.Popen, creationflags=0x08000000) #No-Window flag
 
@@ -45,6 +63,10 @@ if not "python" in sys.executable.lower():
     PATH = sys.executable.replace("\\", "/").rsplit("/", 1)[0]+"/"
 else:
     PATH = os.getcwd().replace("\\", "/")+"/"
+
+
+with open(PATH+"selectors.json", "r") as f:
+    saved = json.load(f)
 
 try:
     public_selectors = requests.get("https://raw.githubusercontent.com/ToasterUwU/Anti-Scalp/main/selectors.json").json()
@@ -58,22 +80,15 @@ try:
         with open(PATH+"selectors.json", "w") as f:
             json.dump(own_selectors, f, indent=4, ensure_ascii=False)
 except:
-    pass
+    with open(PATH+"selectors.json", "w") as f:
+        json.dump(saved, f)
 
-def error_out(msg):
-    app = QApplication(sys.argv)
-    msg_box = QMessageBox()
-    msg_box.setIcon(QMessageBox.Critical)
-    msg_box.setWindowTitle("Error")
-    msg_box.setText(msg)
-    msg_box.exec()
-    sys.exit(0)
 
 if not os.path.exists(PATH+"selectors.json"):
-    error_out("Missing 'selectors.json' config file.")
+    raise FileNotFoundError("Missing 'selectors.json' config file.")
 
 if not os.path.exists(PATH+"links/"):
-    error_out("Missing 'links' folder.")
+    raise FileNotFoundError("Missing 'links' folder.")
 
 class utility():
     def evenly_chunk(items:Iterable, max_chunk_size:int=20):
