@@ -113,6 +113,7 @@ I will add the configuration for that shop. Im planning on making the process au
 - UK
   - Currys
   - Ebuyer
+  - Argos
 
 If you are missing something please join the [discord server](https://discord.gg/76ZAefBcC4) and tell me there.
 

@@ -12,7 +12,7 @@
     "proshop": {
         "buyable": "button.site-btn-addToBasket-lg",
         "price": ".site-currency-attention",
-        "invalid_price": "Die Ware ist leider nicht mehr verfÃ¼gbar.",
+        "invalid_price": "Die Ware ist leider nicht mehr verfügbar.",
         "requests": true
     },
     "mediamarkt": {
@@ -49,6 +49,11 @@
     "ebuyer": {
         "buyable": "input.button--add-to-basket",
         "price": "div.purchase-info p.price",
+        "requests": true
+    },
+    "argos": {
+        "buyable": "button[data-test='add-to-trolley-button-button']",
+        "price": "li[data-test='product-price-primary'] h2",
         "requests": true
     }
 }
