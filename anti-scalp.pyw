@@ -78,10 +78,10 @@ try:
             own_selectors[name] = public_selectors[name]
 
         with open(PATH+"selectors.json", "w") as f:
-            json.dump(own_selectors, f, indent=4, ensure_ascii=False)
+            json.dump(own_selectors, f, indent=4)
 except:
     with open(PATH+"selectors.json", "w") as f:
-        json.dump(saved, f)
+        json.dump(saved, f, indent=4)
 
 
 if not os.path.exists(PATH+"selectors.json"):
