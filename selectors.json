@@ -65,5 +65,10 @@
         "buyable": "#btn-buy-productInfo",
         "price": "div.pprice",
         "requests": true
+    },
+    "novatech": {
+        "buyable": "div.basket-button.green-solid.newspec-basketbutton.hideprint",
+        "price": "p.newspec-price",
+        "requests": true
     }
 }
