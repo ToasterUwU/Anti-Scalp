@@ -107,6 +107,7 @@ I will add the configuration for that shop. Im planning on making the process au
   - Mediamarkt
   - Saturn
   - Caseking
+  - Mindfactory
 - USA
   - Newegg
   - Bestbuy
@@ -114,6 +115,7 @@ I will add the configuration for that shop. Im planning on making the process au
   - Currys
   - Ebuyer
   - Argos
+  - Zi-Clone
 
 If you are missing something please join the [discord server](https://discord.gg/76ZAefBcC4) and tell me there.
 
@@ -130,6 +132,7 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 - [X] ~~Autoupdate selectors.json~~
 - [X] ~~Error logging for debugging~~
 - [ ] Save settings
+- [ ] Auto accept cookies to fix "Auto add to cart" on some websites
 - [ ] Tutorial video for the ones that are not so good with tech
 - [ ] Only notify under specific price (Will sort out moon prices)
 - [ ] Average price checker

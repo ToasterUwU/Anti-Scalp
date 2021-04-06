@@ -100,7 +100,7 @@ class utility():
         return result
 
     def shopname(link:str):
-        return link.split("://", 1)[1].split("/", 1)[0].split(".")[1]
+        return link.replace("www.", "", 1).split("://", 1)[1].split("/", 1)[0].split(".", 1)[0]
 
     def format_price(price:str):
         price = price.replace("\n", "").replace(",", ".").replace(".–", ".00").replace("\xa0", " ")
@@ -612,7 +612,7 @@ class GUI():
             id_hash = hashlib.sha256((pc_name+username).encode()).hexdigest()
 
             webhook = Webhook.from_url(usage_webhook, adapter=RequestsWebhookAdapter())
-            webhook.send(f"Instance ({random.randint(0, 1000000)}) started on `{id_hash}`")
+            webhook.send(f"Instance started on `{id_hash}`")
         except:
             pass
 

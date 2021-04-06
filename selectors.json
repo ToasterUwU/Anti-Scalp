@@ -55,5 +55,15 @@
         "buyable": "button[data-test='add-to-trolley-button-button']",
         "price": "li[data-test='product-price-primary'] h2",
         "requests": true
+    },
+    "zi-mm": {
+        "buyable": "button[name='add-to-cart']",
+        "price": "p.price bdi",
+        "requests": true
+    },
+    "mindfactory": {
+        "buyable": "#btn-buy-productInfo",
+        "price": "div.pprice",
+        "requests": true
     }
 }
