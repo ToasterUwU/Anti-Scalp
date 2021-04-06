@@ -70,5 +70,10 @@
         "buyable": "div.basket-button.green-solid.newspec-basketbutton.hideprint",
         "price": "p.newspec-price",
         "requests": true
+    },
+    "scan": {
+        "buyable": "div.buyButton.large",
+        "price": "span.price",
+        "requests": true
     }
 }
