@@ -5,7 +5,7 @@
         "requests": false
     },
     "alternate": {
-        "buyable": "#add-to-cart-form button:not([disabled='disabled'])",
+        "buyable": "#add-to-cart-form button.details-cart-button:not(.btn-inactive)",
         "price": ".price span",
         "requests": true
     },
