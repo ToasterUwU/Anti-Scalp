@@ -100,5 +100,20 @@
         "buyable": "div.prod-product-cta-add-to-cart.display-inline-block",
         "price": "span.price-group",
         "requests": false
+    },
+    "adorama": {
+        "buyable": "button[data-action='addToCart']",
+        "price": "strong.your-price",
+        "requests": true
+    },
+    "bhphotovideo": {
+        "buyable": "button[data-selenium='addToCartButton']",
+        "price": "div[data-selenium='pricingPrice']",
+        "requests": false
+    },
+    "officedepot": {
+        "buyable": "#addToCartButtonId",
+        "price": "span.price_column.right",
+        "requests": true
     }
 }

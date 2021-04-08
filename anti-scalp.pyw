@@ -6,7 +6,6 @@ import logging
 import math
 import os
 import platform
-import random
 import re
 import shutil
 import subprocess
@@ -926,8 +925,6 @@ class GUI():
             self.result_browser.quit()
         except:
             pass
-
-        self.sel_checker.close()
 
 if __name__ == "__main__":
     gui = GUI()

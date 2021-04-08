@@ -116,6 +116,9 @@ I will add the configuration for that shop. Im planning on making the process au
   - Bestbuy
   - Target
   - Walmart
+  - Adorama
+  - B&H
+  - Office Depot
 - UK
   - Currys
   - Ebuyer
