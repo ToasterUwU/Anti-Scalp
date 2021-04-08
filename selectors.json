@@ -75,5 +75,30 @@
         "buyable": "div.buyButton.large",
         "price": "span.price",
         "requests": true
+    },
+    "target": {
+        "buyable": "button.Button__ButtonWithStyles-sc-1a5r2pb-0.styles__StyledButton-sc-1f2lsll-0.ioXwkT.iIyhFg",
+        "price": "div.style__PriceFontSize-sc-17wlxvr-0.ceEMdT",
+        "requests": false
+    },
+    "cyberport": {
+        "buyable": "div.addToCart",
+        "price": "div.price.delivery-price.orange",
+        "requests": true
+    },
+    "coolmod": {
+        "buyable": "button.button-buy",
+        "price": "span.text-price-total",
+        "requests": true
+    },
+    "aria": {
+        "buyable": "#addQuantityButton",
+        "price": "span.priceBig",
+        "requests": true
+    },
+    "walmart": {
+        "buyable": "div.prod-product-cta-add-to-cart.display-inline-block",
+        "price": "span.price-group",
+        "requests": false
     }
 }

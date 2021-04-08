@@ -6,12 +6,13 @@
 
 - Runs on your PC, not on a Server you set up
 - Designed and programmed with everyone in mind, not only people that know how to use a terminal
-- Doesnt notify you somewhere and lets your reaction time decide when you open the link, but instead opens the link instantly in your standard browser for you
+- Opens the links for you and adds the product to the cart
 - Easy to extend
-- Notifys you about updates
+- Notifys you about software updates
 - Has a graphical interface
+- Doesnt cost you 500$+ (https://botbroker.io/bots)
 
-So basically: This tool isnt for informing a big group of people (like a Discord Server), but for personal use. And it definitely is better for personal use then all Stock-Checkers i saw.
+So basically: This tool is NOT for informing a big group of people (like a Discord Server), but for personal use. And it definitely is better for personal use then all Stock-Checkers i saw. However: You can also use it to alert a Discord Server.
 
 Screenshots:
 
@@ -48,7 +49,7 @@ This bundle of code is able to check stock of products.
 Meaning you can check hundreds of links in less then a minute. You just have to find links of the products you want, obviously the ones that have normal prices but are sold out, and put them in a .txt file. Just under each other.
 
 Then you start the program and select the regions and products you want to check, and click start.
-Thats it, the program will now check the links over and over, as fast as possible. And if it finds a product that is in stock, it will play a sound and open the link in your standard browser, so you instantly click "Buy".
+Thats it, the program will now check the links over and over, as fast as possible. And if it finds a product that is in stock, it will play a sound, opens the link in a browser and tries to add it to the cart.
 
 <br>
 
@@ -91,7 +92,6 @@ In case you see a message like "Removed ***shopname*** link, ***shopname*** isnt
 - Join the [discord server](https://discord.gg/76ZAefBcC4)
 - Tell me what shop you want to have added in the config
 - Send me a link of a product that is sold out and one link of something that is always in stock
-- Send me the selectors.json file in the directory of the anti-scalp executable
 
 I will add the configuration for that shop. Im planning on making the process automated, but its not that easy. So it will be a feature for the future.
 
@@ -108,9 +108,14 @@ I will add the configuration for that shop. Im planning on making the process au
   - Saturn
   - Caseking
   - Mindfactory
+  - Cyberport
+- Spain
+  - Coolmod
 - USA
   - Newegg
   - Bestbuy
+  - Target
+  - Walmart
 - UK
   - Currys
   - Ebuyer
@@ -118,6 +123,7 @@ I will add the configuration for that shop. Im planning on making the process au
   - Zi-Clone
   - Novatech
   - Scan (Only works if you are in the UK)
+  - Aria
 
 If you are missing something please join the [discord server](https://discord.gg/76ZAefBcC4) and tell me there.
 
