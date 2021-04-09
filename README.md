@@ -106,7 +106,6 @@ I will add the configuration for that shop. Im planning on making the process au
   - Proshop
   - Mediamarkt
   - Saturn
-  - Caseking
   - Mindfactory
   - Cyberport
 - Spain
