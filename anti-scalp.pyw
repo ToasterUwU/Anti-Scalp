@@ -6,6 +6,7 @@ import logging
 import math
 import os
 import platform
+import random
 import re
 import shutil
 import subprocess
@@ -18,27 +19,36 @@ from difflib import SequenceMatcher
 from itertools import cycle
 from typing import Callable, Iterable
 
+import lxml.html
 import playsound
 import requests
-from bs4 import BeautifulSoup
+from darktheme.widget_template import DarkPalette
 from discord import Embed, Webhook
 from discord.webhook import RequestsWebhookAdapter
+from lxml.cssselect import CSSSelector
+from lxml.etree import _ElementTree
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
                              QGridLayout, QGroupBox, QLabel, QLineEdit,
                              QMessageBox, QPushButton, QSlider, QWidget)
 from selenium import webdriver
+from tldextract import extract as url_parse
 
 VERISON = "1.1.1"
 
 logging.basicConfig(
-    level=logging.ERROR,
-    filename="error.log"
+    level=logging.INFO,
+    filename="error.log",
+    filemode= "w+"
 )
 
 def error_out(msg):
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    app.setPalette(DarkPalette())
+    app.setStyleSheet("QToolTip { color: #ffffff; background-color: grey; border: 1px solid white; }")
+
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Critical)
     msg_box.setWindowTitle("Error")
@@ -99,10 +109,21 @@ class utility():
         return result
 
     def shopname(link:str):
-        return link.replace("www.", "", 1).split("://", 1)[1].split("/", 1)[0].split(".", 1)[0]
+        return url_parse(link)[1]
 
     def format_price(price:str):
-        price = price.replace("\n", "").replace(",", ".").replace(".–", ".00").replace("\xa0", " ")
+        if price == None:
+            return None
+
+        pairs = {
+            "\n": "",
+            ",": ".",
+            ".–": ".00",
+            "\xa0": " "
+        }
+
+        for old, new in pairs.items():
+            price = price.replace(old, new)
 
         if " " in price:
             chunks = price.split(" ")
@@ -197,14 +218,20 @@ class Broswer():
         with open("selectors.json", "r") as f:
             self.selectors = json.load(f)
 
+    def get_by_selector(self, selector):
+        if selector.startswith("//"):
+            return self.driver.find_element_by_xpath(selector)
+        else:
+            return self.driver.find_element_by_css_selector(selector)
+
     def buyable(self, link):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
             self._get(link)
-            result = self._buyable(shopname)
+            buyable = self._buyable(shopname)
             title = self.driver.title
             self._get("about:blank", count=False)
-            return {"result": result, "title": title, "link": link}
+            return {"buyable": buyable, "title": title, "link": link}
 
     def price(self, link):
         shopname = utility.shopname(link)
@@ -214,17 +241,18 @@ class Broswer():
             title = self.driver.title
             self._get("about:blank", count=False)
             if price:
-                return {"result": price, "title": title, "link": link}
+                return {"price": price, "title": title, "link": link}
 
     def buyable_price(self, link:str):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
             self._get(link)
             title = self.driver.title
-            if self._buyable(shopname):
-                result = self._price(shopname)
-                self._get("about:blank", count=False)
-                return {"result": result, "title": title, "link": link}
+            buyable = self._buyable(shopname)
+            price = self._price(shopname)
+
+            self._get("about:blank", count=False)
+            return {"buyable": buyable, "price": price, "title": title, "link": link}
 
     def add_to_cart(self, link):
         shop = utility.shopname(link)
@@ -233,7 +261,7 @@ class Broswer():
 
             selector = self.selectors[shop]["buyable"]
 
-            btn = self.driver.find_element_by_css_selector(selector)
+            btn = self.get_by_selector(selector)
             btn.click()
 
     def new_driver(self):
@@ -268,7 +296,7 @@ class Broswer():
     def _buyable(self, shop):
         selector = self.selectors[shop]["buyable"]
         try:
-            self.driver.find_element_by_css_selector(selector)
+            self.get_by_selector(selector)
             return True
         except:
             return False
@@ -281,7 +309,7 @@ class Broswer():
             invalid_price = None
 
         try:
-            price = self.driver.find_element_by_css_selector(selector)
+            price = self.get_by_selector(selector)
             if invalid_price:
                 if SequenceMatcher(None, price.text, invalid_price).ratio() >= 0.9:
                     return None
@@ -323,8 +351,10 @@ class Selenium_Checker(Checker):
                         except:
                             continue
 
-                        if data_dict:
+                        if data_dict["buyable"]:
                             self.return_func(data_dict)
+
+                        logging.info(f"OUT OF STOCK -> {data_dict['title']} ({data_dict['link']}) -> {utility.format_price(data_dict['price'])}")
 
                     else:
                         links.remove(link)
@@ -363,12 +393,21 @@ class Requester():
         with open("selectors.json", "r") as f:
             self.selectors = json.load(f)
 
+    def get_by_selector(self, tree:_ElementTree, selector):
+        if selector.startswith("//"):
+            return tree.xpath(selector)
+        else:
+            selector = CSSSelector(selector)
+            elements = tree.xpath(selector.path)
+            for element in elements:
+                return element
+
     def buyable(self, link):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
             bs, title = self._get(link)
             buyable = self._buyable(bs, shopname)
-            return {"result": buyable, "title": title, "link": link}
+            return {"buyable": buyable, "title": title, "link": link}
 
     def price(self, link):
         shopname = utility.shopname(link)
@@ -376,37 +415,39 @@ class Requester():
             bs, title = self._get(link)
             price = self._price(bs, shopname)
             if price:
-                return {"result": price, "title": title, "link": link}
+                return {"price": price, "title": title, "link": link}
 
     def buyable_price(self, link):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
-            bs, title = self._get(link)
-            if self._buyable(bs, shopname):
-                price = self._price(bs, shopname)
-                return {"result": price, "title": title, "link": link}
+            tree, title = self._get(link)
+
+            buyable = self._buyable(tree, shopname)
+            price = self._price(tree, shopname)
+
+            return {"buyable": buyable, "price": price, "title": title, "link": link}
 
     def _get(self, link):
-        headers = {'User-Agent': 'Chrome/89.0.4389'} #Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36
-        html = requests.get(link, headers=headers)
-        bs = BeautifulSoup(html.text, features="html.parser")
+        headers = {'User-Agent': 'Chrome/89.0.4389'}
+        html = requests.get(link, headers=headers).content.decode()
+        tree = lxml.html.document_fromstring(html)
         try:
-            title = bs.select_one("title").get_text()
+            title = self.get_by_selector(tree, "title").text
         except:
             raise Exception(f"Bot access not allowed on {utility.shopname(link)}")
 
-        return bs, title
+        return tree, title
 
-    def _buyable(self, bs:BeautifulSoup, shop:str):
+    def _buyable(self, tree:_ElementTree, shop:str):
         selector = self.selectors[shop]["buyable"]
 
-        element = bs.select_one(selector)
-        if element:
+        element = self.get_by_selector(tree, selector)
+        if element is not None:
             return True
         else:
             return False
 
-    def _price(self, bs:BeautifulSoup, shop:str):
+    def _price(self, tree:_ElementTree, shop:str):
         selector = self.selectors[shop]["price"]
 
         if "invalid_price" in self.selectors[shop]:
@@ -415,12 +456,12 @@ class Requester():
             invalid_price = None
 
         try:
-            price = bs.select_one(selector)
+            price = self.get_by_selector(tree, selector)
             if invalid_price:
-                if SequenceMatcher(None, price.get_text(), invalid_price).ratio() >= 0.9:
+                if SequenceMatcher(None, price.text, invalid_price).ratio() >= 0.9:
                     return None
 
-            return price.get_text()
+            return price.text
         except:
             return None
 
@@ -446,8 +487,10 @@ class Request_Checker(Checker):
                             self.log(f"{shopname} doesnt allow bot access. Use Selenium instead of Requests.")
                             continue
 
-                        if data_dict:
+                        if data_dict["buyable"]:
                             self.return_func(data_dict)
+
+                        logging.info(f"OUT OF STOCK -> {data_dict['title']} ({data_dict['link']}) -> {utility.format_price(data_dict['price'])}")
 
                     else:
                         links.remove(link)
@@ -558,6 +601,7 @@ class Link_Getter():
                     if p in self.products:
                         links.extend(self.all_links[region][p])
 
+        random.shuffle(links)
         return links
 
     def format_link(self, shop, link):
@@ -621,6 +665,10 @@ class GUI():
         self.result_browser._get("file://"+PATH+"startup.html", count=False)
 
         self.app = QApplication(sys.argv)
+        self.app.setStyle("Fusion")
+        self.app.setPalette(DarkPalette())
+        self.app.setStyleSheet("QToolTip { color: #ffffff; background-color: grey; border: 1px solid white; }")
+
         self.msgs = []
 
         icon = QIcon()
@@ -827,7 +875,8 @@ class GUI():
         self.log_box.setText("\n".join(self.msgs))
 
     def alert(self, data_dict:dict):
-        self.log(f"FOUND {data_dict['title']} -> {data_dict['result']}".replace("\n", ""))
+        logging.info(f"IN STOCK -> {data_dict['title']} ({data_dict['link']}) -> {utility.format_price(data_dict['price'])}")
+        self.log(f"FOUND {data_dict['title']} -> {utility.format_price(data_dict['price'])}")
 
         if self.setting_play_sound.isChecked():
             self.play_sound()
@@ -925,6 +974,12 @@ class GUI():
             self.result_browser.quit()
         except:
             pass
+
+        def close_sel():
+            self.sel_checker.close()
+            sys.exit(0)
+
+        threading.Thread(target=close_sel, daemon=False).start()
 
 if __name__ == "__main__":
     gui = GUI()
