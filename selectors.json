@@ -5,7 +5,7 @@
         "requests": false
     },
     "alternate": {
-        "buyable": "#add-to-cart-form button.details-cart-button:not(.btn-inactive)",
+        "buyable": ".details-cart-button:not(.btn-inactive)",
         "price": ".price span",
         "requests": true
     },
@@ -24,11 +24,6 @@
         "buyable": "#pdp-add-to-cart-button:not([disabled])",
         "price": "span.Pricestyled__BrandedPriceTypo-sc-1bu146t-0.bUYFGp",
         "requests": false
-    },
-    "caseking": {
-        "buyable": "#basketButton",
-        "price": "div.article_details_price strong",
-        "requests": true
     },
     "newegg": {
         "buyable": ".qty-box-input",
