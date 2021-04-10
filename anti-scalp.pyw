@@ -35,7 +35,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
 from selenium import webdriver
 from tldextract import extract as url_parse
 
-VERISON = "1.1.1"
+VERSION = "1.2"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -167,10 +167,10 @@ class Broswer():
             if self.browser == "firefox":
                 try:
                     self.options = webdriver.firefox.options.Options()
-                    self.options.headless = headless
+                    self.options.set_headless()
                     if bin_path:
                         self.options.binary_location = bin_path
-                    test_driver = webdriver.Firefox(options=self.options, service_log_path=os.devnull)
+                    test_driver = webdriver.Firefox(options=self.options, log_path=os.devnull)
                 except:
                     if not chrome_failed:
                         self.browser = "chrome"
@@ -183,10 +183,10 @@ class Broswer():
             else:
                 try:
                     self.options = webdriver.chrome.options.Options()
-                    self.options.headless = headless
+                    self.options.set_headless()
                     if bin_path:
                         self.options.binary_location = bin_path
-                    test_driver = webdriver.Chrome(options=self.options)
+                    test_driver = webdriver.Chrome(options=self.options, service_log_path=os.devnull)
                 except:
                     if not firefox_failed:
                         self.browser = "firefox"
@@ -202,12 +202,12 @@ class Broswer():
         else:
             if self.browser == "firefox":
                 self.options = webdriver.firefox.options.Options()
-                self.options.headless = headless
+                self.options.set_headless(headless)
                 if bin_path:
                     self.options.binary_location = bin_path
             else:
                 self.options = webdriver.chrome.options.Options()
-                self.options.headless = headless
+                self.options.set_headless(headless)
                 if bin_path:
                     self.options.binary_location = bin_path
 
@@ -273,7 +273,7 @@ class Broswer():
             profile = webdriver.FirefoxProfile()
             profile.set_preference("permissions.default.image", 2)
 
-            self.driver = webdriver.Firefox(options=self.options, firefox_profile=profile, service_log_path=os.devnull)
+            self.driver = webdriver.Firefox(options=self.options, firefox_profile=profile, log_path=os.devnull)
 
         elif self.browser == "chrome":
             chrome_prefs = {}
@@ -281,7 +281,7 @@ class Broswer():
             chrome_prefs["profile.managed_default_content_settings"] = {"images": 2}
             self.options.experimental_options["prefs"] = chrome_prefs
 
-            self.driver = webdriver.Chrome(options=self.options)
+            self.driver = webdriver.Chrome(options=self.options, service_log_path=os.devnull)
 
     def _get(self, link, count=True):
         if count:
@@ -314,9 +314,9 @@ class Broswer():
                 if SequenceMatcher(None, price.text, invalid_price).ratio() >= 0.9:
                     return None
                 else:
-                    return price.text
+                    return utility.format_price(price.text)
             else:
-                return price.text
+                return utility.format_price(price.text)
         except:
             return None
 
@@ -331,7 +331,7 @@ class Selenium_Checker(Checker):
 
     def start(self):
         def check_links(links:list):
-            b = Broswer(**self.b_kwargs)
+            b = Broswer(max_gets=len(links), **self.b_kwargs)
             self.browsers.append(b)
 
             number = self._get_i()
@@ -339,7 +339,7 @@ class Selenium_Checker(Checker):
                 if links == []:
                     break
 
-                for link in links:
+                for link, p in links:
                     if not self.run:
                         break
 
@@ -352,9 +352,9 @@ class Selenium_Checker(Checker):
                             continue
 
                         if data_dict["buyable"]:
-                            self.return_func(data_dict)
+                            self.return_func(data_dict, p)
 
-                        logging.info(f"OUT OF STOCK -> {data_dict['title']} ({data_dict['link']}) -> {utility.format_price(data_dict['price'])}")
+                        logging.info(f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
 
                     else:
                         links.remove(link)
@@ -405,15 +405,15 @@ class Requester():
     def buyable(self, link):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
-            bs, title = self._get(link)
-            buyable = self._buyable(bs, shopname)
+            tree, title = self._get(link)
+            buyable = self._buyable(tree, shopname)
             return {"buyable": buyable, "title": title, "link": link}
 
     def price(self, link):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
-            bs, title = self._get(link)
-            price = self._price(bs, shopname)
+            tree, title = self._get(link)
+            price = self._price(tree, shopname)
             if price:
                 return {"price": price, "title": title, "link": link}
 
@@ -461,7 +461,7 @@ class Requester():
                 if SequenceMatcher(None, price.text, invalid_price).ratio() >= 0.9:
                     return None
 
-            return price.text
+            return utility.format_price(price.text)
         except:
             return None
 
@@ -474,7 +474,7 @@ class Request_Checker(Checker):
                 if links == []:
                     break
 
-                for link in links:
+                for link, p in links:
                     if not self.run:
                         break
 
@@ -488,9 +488,9 @@ class Request_Checker(Checker):
                             continue
 
                         if data_dict["buyable"]:
-                            self.return_func(data_dict)
+                            self.return_func(data_dict, p)
 
-                        logging.info(f"OUT OF STOCK -> {data_dict['title']} ({data_dict['link']}) -> {utility.format_price(data_dict['price'])}")
+                        logging.info(f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
 
                     else:
                         links.remove(link)
@@ -518,6 +518,9 @@ class Link_Getter():
 
         self.all_links = {}
         for folder in os.listdir(PATH+"links/"):
+            if folder.endswith(".json"):
+                continue
+
             for txt in os.listdir(PATH+"links/"+folder+"/"):
                 with open(PATH+"links/"+folder+"/"+txt, "r") as f:
                     lines = f.readlines()
@@ -599,7 +602,7 @@ class Link_Getter():
             if region in self.regions:
                 for p in self.all_links[region]:
                     if p in self.products:
-                        links.extend(self.all_links[region][p])
+                        links.extend([[x, p] for x in self.all_links[region][p]])
 
         random.shuffle(links)
         return links
@@ -620,11 +623,11 @@ class Link_Getter():
         links = self.get_all_links()
 
         new_links = []
-        for link in links:
+        for link, p in links:
             shop = utility.shopname(link)
             if shop not in banned_shops:
                 link = self.format_link(shop, link)
-                new_links.append(link)
+                new_links.append([link, p])
 
         return new_links
 
@@ -637,11 +640,11 @@ class Link_Getter():
         links = self.get_all_links()
 
         new_links = []
-        for link in links:
+        for link, p in links:
             shop = utility.shopname(link)
             if shop not in banned_shops:
                 link = self.format_link(shop, link)
-                new_links.append(link)
+                new_links.append([link, p])
 
         return new_links
 
@@ -828,7 +831,7 @@ class GUI():
         except:
             return
 
-        if VERISON != newest_ver:
+        if VERSION != newest_ver:
             icon = QIcon()
             try:
                 icon.addFile(PATH+"icon.ico")
@@ -839,7 +842,7 @@ class GUI():
             msg.setIcon(QMessageBox.Information)
             msg.setWindowIcon(icon)
             msg.setWindowTitle("New Version")
-            msg.setText(f"There is a new version of Anti-Scalp.\n\nCurrent: {VERISON}\nNewest: {newest_ver}")
+            msg.setText(f"There is a new version of Anti-Scalp.\n\nCurrent: {VERSION}\nNewest: {newest_ver}")
             msg.setStandardButtons(QMessageBox.Ok)
             msg.buttonClicked.connect(pressed_ok)
             msg.show()
@@ -874,9 +877,19 @@ class GUI():
         self.msgs.append(msg)
         self.log_box.setText("\n".join(self.msgs))
 
-    def alert(self, data_dict:dict):
-        logging.info(f"IN STOCK -> {data_dict['title']} ({data_dict['link']}) -> {utility.format_price(data_dict['price'])}")
-        self.log(f"FOUND {data_dict['title']} -> {utility.format_price(data_dict['price'])}")
+    def alert(self, data_dict:dict, p:str):
+        with open(PATH+"links/max-prices.json", "r") as f:
+            data = json.load(f)
+            max_prices = {key.casefold(): data[key] for key in data}
+
+        if data_dict['price'] != None:
+            if p.casefold() in max_prices:
+                if max_prices[p.casefold()] < data_dict['price']:
+                    logging.info(f"OVERPRICED -> {p} ({data_dict['link']}) -> {data_dict['price']}")
+                    return
+
+        logging.info(f"IN STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
+        self.log(f"FOUND {data_dict['title']} -> {data_dict['price']}")
 
         if self.setting_play_sound.isChecked():
             self.play_sound()
@@ -895,7 +908,7 @@ class GUI():
             # Claiming this software as yours is illegal and will be prosecuted. Changing any of the text in the embed also counts as changing the code.
             # (Execptions can be made if you have a agreement with me: ToasterUwU)
 
-            embed = Embed(title=data_dict['title'], description=f"Found {data_dict['title']} for {data_dict['result']}\n\n{data_dict['link']}", color=0xadff2f)
+            embed = Embed(title=data_dict['title'], description=f"Found {p} for {data_dict['result']}\n\n{data_dict['link']}", color=0xadff2f)
             embed.add_field(name="Send by Anti-Scalp", value="Anti Scalp is a Stock-Checker, made for everyone and free. To get much faster access to the stock alerts, download it and use it yourself. (No worries, it has a graphical interface. Like i said: Made for everyone)\n\nhttps://github.com/ToasterUwU/Anti-Scalp", inline=False)
             embed.add_field(name="Copyright", value="This Software is made by ToasterUwU. Claiming it as yours is illegal and will be prosecuted.", inline=False)
 
@@ -976,7 +989,10 @@ class GUI():
             pass
 
         def close_sel():
-            self.sel_checker.close()
+            try:
+                self.sel_checker.close()
+            except AttributeError:
+                pass
             sys.exit(0)
 
         threading.Thread(target=close_sel, daemon=False).start()
