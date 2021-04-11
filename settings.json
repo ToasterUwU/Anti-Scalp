@@ -1,0 +1,7 @@
+{
+    "notification_sound": true,
+    "use_browsers": true,
+    "webhook_url": "",
+    "links_browser": 15,
+    "links_requester": 40
+}

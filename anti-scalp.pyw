@@ -96,8 +96,15 @@ except:
 if not os.path.exists(PATH+"selectors.json"):
     raise FileNotFoundError("Missing 'selectors.json' config file.")
 
+if not os.path.exists(PATH+"settings.json"):
+    raise FileNotFoundError("Missing 'settings.json' config file.")
+
 if not os.path.exists(PATH+"links/"):
     raise FileNotFoundError("Missing 'links' folder.")
+
+if not os.path.exists(PATH+"links/max-prices.json"):
+    with open(PATH+"links/max-prices.json", "w+") as f:
+        json.dump({}, f)
 
 class utility():
     def evenly_chunk(items:Iterable, max_chunk_size:int=20):
@@ -730,6 +737,29 @@ class GUI():
 
         self.main_layout.addWidget(self.product_box, 0, 2)
 
+        with open(PATH+"links/max-prices.json", "r") as f:
+            data = json.load(f)
+            max_prices = {key.casefold(): data[key] for key in data}
+
+        self.max_price_box = QGroupBox("Max Prices")
+        self.max_price_grid = QGridLayout()
+        self.max_price_box.setLayout(self.max_price_grid)
+
+        row = 0
+        self.max_price_line_edits = {}
+        for p in self.product_check_boxes:
+            if p not in max_prices:
+                max_prices[p] = 0
+
+            self.max_price_line_edits[p] = QLineEdit(text=str(max_prices[p]))
+            self.max_price_grid.addWidget(self.max_price_line_edits[p], row, 0)
+            row += 1
+
+        with open(PATH+"links/max-prices.json", "w") as f:
+            json.dump(max_prices, f)
+
+        self.main_layout.addWidget(self.max_price_box, 0, 3)
+
         self.settings_btn = QPushButton(text="Settings")
         self.settings_btn.clicked.connect(self.settings_menu)
         self.main_layout.addWidget(self.settings_btn, 1, 0)
@@ -742,21 +772,40 @@ class GUI():
         self.github_btn.clicked.connect(self.open_github_page)
         self.main_layout.addWidget(self.github_btn, 1, 2)
 
+        self.save_max_price_btn = QPushButton(text="Save")
+        self.save_max_price_btn.clicked.connect(self.save_max_prices)
+        self.main_layout.addWidget(self.save_max_price_btn, 1, 3)
+
         self.main.setLayout(self.main_layout)
         self.main.show()
 
+
+        with open(PATH+"settings.json", "r") as f:
+            settings = json.load(f)
 
         self.settings = QWidget()
         self.settings.setWindowTitle("Settings")
         self.settings.setWindowIcon(icon)
         self.settings_layout = QGridLayout()
 
+
+        if "notification_sound" in settings:
+            value = settings["notification_sound"]
+        else:
+            value = True
+
         self.setting_play_sound = QCheckBox(text="Notification Sound")
-        self.setting_play_sound.setChecked(True)
+        self.setting_play_sound.setChecked(value)
         self.settings_layout.addWidget(self.setting_play_sound, 0, 0)
 
+
+        if "use_browsers" in settings:
+            value = settings["use_browsers"]
+        else:
+            value = True
+
         self.setting_use_selenium = QCheckBox(text="Use hidden Browsers (CPU intensive)")
-        self.setting_use_selenium.setChecked(True)
+        self.setting_use_selenium.setChecked(value)
         self.settings_layout.addWidget(self.setting_use_selenium, 1, 0)
 
         self.setting_change_sound = QPushButton(text="Change Sound")
@@ -772,13 +821,18 @@ class GUI():
         self.settings_layout.addWidget(self.setting_open_links_folder)
 
 
+        if "webhook_url" in settings:
+            value = settings["webhook_url"]
+        else:
+            value = ""
+
         self.webhook_frame = QFrame()
         self.webhook_layout = QGridLayout()
         self.webhook_frame.setLayout(self.webhook_layout)
 
         self.webhook_label = QLabel()
         self.webhook_label.setText("Discord Webhook URL: ")
-        self.webhook_entry = QLineEdit()
+        self.webhook_entry = QLineEdit(text=value)
         self.webhook_layout.addWidget(self.webhook_label, 0, 0)
         self.webhook_layout.addWidget(self.webhook_entry, 0, 1)
 
@@ -793,6 +847,12 @@ class GUI():
         self.setting_test_browser.clicked.connect(self.open_github_page)
         self.settings_layout.addWidget(self.setting_test_browser, 1, 1)
 
+
+        if "links_browser" in settings:
+            value = settings["links_browser"]
+        else:
+            value = 10
+
         self.links_per_b_label = QLabel()
         self.settings_layout.addWidget(self.links_per_b_label, 2, 1)
 
@@ -800,8 +860,14 @@ class GUI():
         self.setting_links_per_b.valueChanged[int].connect(lambda i: self.links_per_b_label.setText(f"Links per Browser: {i}"))
         self.setting_links_per_b.setMinimum(1)
         self.setting_links_per_b.setMaximum(50)
-        self.setting_links_per_b.setValue(10)
+        self.setting_links_per_b.setValue(value)
         self.settings_layout.addWidget(self.setting_links_per_b, 3, 1)
+
+
+        if "links_requester" in settings:
+            value = settings["links_requester"]
+        else:
+            value = 20
 
         self.links_per_r_label = QLabel()
         self.settings_layout.addWidget(self.links_per_r_label, 4, 1)
@@ -810,7 +876,7 @@ class GUI():
         self.setting_links_per_r.valueChanged[int].connect(lambda i: self.links_per_r_label.setText(f"Links per Requester: {i}"))
         self.setting_links_per_r.setMinimum(1)
         self.setting_links_per_r.setMaximum(100)
-        self.setting_links_per_r.setValue(20)
+        self.setting_links_per_r.setValue(value)
         self.settings_layout.addWidget(self.setting_links_per_r, 5, 1)
 
         self.settings.setLayout(self.settings_layout)
@@ -884,7 +950,7 @@ class GUI():
 
         if data_dict['price'] != None:
             if p.casefold() in max_prices:
-                if max_prices[p.casefold()] < data_dict['price']:
+                if max_prices[p.casefold()] < data_dict['price'] and max_prices[p.casefold()] > 0:
                     logging.info(f"OVERPRICED -> {p} ({data_dict['link']}) -> {data_dict['price']}")
                     return
 
@@ -940,6 +1006,19 @@ class GUI():
             if box.isChecked():
                 self.getter.add_product(name)
 
+    def save_max_prices(self):
+        max_prices = {}
+        for p, edit in self.max_price_line_edits.items():
+            try:
+                max_price = float(edit.text().replace(",", "."))
+            except:
+                max_price = 0
+
+            max_prices[p] = max_price
+
+        with open(PATH+"links/max-prices.json", "w") as f:
+            json.dump(max_prices, f, indent=4)
+
     def btn_function(self):
         if self.start_stop_btn.text() == "Stop":
             self.start_stop_btn.setText("Start")
@@ -987,6 +1066,19 @@ class GUI():
             self.result_browser.quit()
         except:
             pass
+
+        settings = {
+            "notification_sound": self.setting_play_sound.isChecked(),
+            "use_browsers": self.setting_use_selenium.isChecked(),
+            "webhook_url": self.webhook_entry.text(),
+            "links_browser": self.setting_links_per_b.value(),
+            "links_requester": self.setting_links_per_r.value()
+        }
+
+        with open("settings.json", "w") as f:
+            json.dump(settings, f, indent=4)
+
+        self.settings.close()
 
         def close_sel():
             try:

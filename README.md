@@ -141,10 +141,10 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 
 - [X] ~~Autoupdate selectors.json~~
 - [X] ~~Error logging for debugging~~
-- [ ] Save settings
+- [X] ~~Save settings~~
 - [ ] Auto accept cookies to fix "Auto add to cart" on some websites
 - [ ] Tutorial video for the ones that are not so good with tech
-- [ ] Only notify under specific price (Will sort out moon prices)
+- [X] ~~Only notify under specific price (Will sort out moon prices)~~
 - [ ] Average price checker
 - [ ] Price history checker
 - [X] ~~Automatically add product to cart~~
