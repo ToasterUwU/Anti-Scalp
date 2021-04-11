@@ -851,7 +851,7 @@ class GUI():
         if "links_browser" in settings:
             value = settings["links_browser"]
         else:
-            value = 10
+            value = 15
 
         self.links_per_b_label = QLabel()
         self.settings_layout.addWidget(self.links_per_b_label, 2, 1)
@@ -867,7 +867,7 @@ class GUI():
         if "links_requester" in settings:
             value = settings["links_requester"]
         else:
-            value = 20
+            value = 40
 
         self.links_per_r_label = QLabel()
         self.settings_layout.addWidget(self.links_per_r_label, 4, 1)
