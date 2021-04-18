@@ -144,6 +144,7 @@ If you need any help with using Anti-Scalp, join the [discord server](https://di
 - [X] ~~Save settings~~
 - [ ] Auto accept cookies to fix "Auto add to cart" on some websites
 - [ ] Tutorial video for the ones that are not so good with tech
+- [X] ~~Discord Presence to show of with Anti-Scalp :P~~
 - [X] ~~Only notify under specific price (Will sort out moon prices)~~
 - [ ] Average price checker
 - [ ] Price history checker

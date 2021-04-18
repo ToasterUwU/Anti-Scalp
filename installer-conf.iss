@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Anti-Scalp"
-#define MyAppVersion "1.2"
+#define MyAppVersion "1.3"
 #define MyAppPublisher "ToasterUwU"
 #define MyAppURL "https://github.com/ToasterUwU/Anti-Scalp"
 #define MyAppExeName "anti-scalp.exe"

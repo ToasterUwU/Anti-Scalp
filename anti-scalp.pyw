@@ -1,3 +1,4 @@
+import datetime
 import functools
 import getpass
 import hashlib
@@ -21,6 +22,7 @@ from typing import Callable, Iterable
 
 import lxml.html
 import playsound
+import pypresence
 import requests
 from darktheme.widget_template import DarkPalette
 from discord import Embed, Webhook
@@ -35,7 +37,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
 from selenium import webdriver
 from tldextract import extract as url_parse
 
-VERSION = "1.2"
+VERSION = "1.3"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -131,6 +133,8 @@ class utility():
 
         for old, new in pairs.items():
             price = price.replace(old, new)
+
+        price = price.replace(".", "", (price.count(".")-1))
 
         if " " in price:
             chunks = price.split(" ")
@@ -360,8 +364,8 @@ class Selenium_Checker(Checker):
 
                         if data_dict["buyable"]:
                             self.return_func(data_dict, p)
-
-                        logging.info(f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
+                        else:
+                            logging.info(f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
 
                     else:
                         links.remove(link)
@@ -669,6 +673,14 @@ class GUI():
         except:
             pass
 
+        self.presence = pypresence.Presence(client_id="833460064303972373")
+        try:
+            self.presence.connect()
+        except Exception as e:
+            logging.error(str(e))
+
+        self.update_presence()
+
         self.getter = Link_Getter()
 
         self.result_browser = Broswer(headless=False)
@@ -963,6 +975,8 @@ class GUI():
         self.req_checker.stop()
         self.sel_checker.stop()
 
+        self.update_presence(details=f"Found a {p}", state=f"for {data_dict['price']}", small_image="pause", small_text="Paused")
+
         try:
             self.result_browser.add_to_cart(data_dict["link"])
         except:
@@ -974,9 +988,9 @@ class GUI():
             # Claiming this software as yours is illegal and will be prosecuted. Changing any of the text in the embed also counts as changing the code.
             # (Execptions can be made if you have a agreement with me: ToasterUwU)
 
-            embed = Embed(title=data_dict['title'], description=f"Found {p} for {data_dict['result']}\n\n{data_dict['link']}", color=0xadff2f)
-            embed.add_field(name="Send by Anti-Scalp", value="Anti Scalp is a Stock-Checker, made for everyone and free. To get much faster access to the stock alerts, download it and use it yourself. (No worries, it has a graphical interface. Like i said: Made for everyone)\n\nhttps://github.com/ToasterUwU/Anti-Scalp", inline=False)
-            embed.add_field(name="Copyright", value="This Software is made by ToasterUwU. Claiming it as yours is illegal and will be prosecuted.", inline=False)
+            embed = Embed(title=data_dict['title'], description=f"Found {p} for {data_dict['price']}\n\n{data_dict['link']}", color=0xadff2f)
+            embed.add_field(name="Sent by Anti-Scalp", value="Anti Scalp is a Stock-Checker, made for everyone and free. To get much faster access to the stock alerts, download it and use it yourself. (No worries, it has a graphical interface. Like I said: Made for everyone)\n\nhttps://github.com/ToasterUwU/Anti-Scalp", inline=False)
+            embed.add_field(name="Copyright", value="This software is made by ToasterUwU. Claiming it as yours is illegal and will be prosecuted.", inline=False)
 
             webhook = Webhook.from_url(webhook_url, adapter=RequestsWebhookAdapter())
             try:
@@ -1019,12 +1033,33 @@ class GUI():
         with open(PATH+"links/max-prices.json", "w") as f:
             json.dump(max_prices, f, indent=4)
 
+    def update_presence(self, **kwargs):
+        standard = {
+            "state": "Paused",
+            "small_image": "pause",
+            "small_text": "Paused",
+            "large_image": "anti-scalp",
+            "buttons": [
+                {"label": "Download", "url": "https://github.com/ToasterUwU/Anti-Scalp"},
+                {"label": "Infos and Support", "url": "https://discord.gg/76ZAefBcC4"}
+            ]
+        }
+
+        standard.update(kwargs)
+
+        try:
+            self.presence.update(**standard)
+        except Exception as e:
+            logging.error(str(e))
+
     def btn_function(self):
         if self.start_stop_btn.text() == "Stop":
             self.start_stop_btn.setText("Start")
 
             self.req_checker.stop()
             self.sel_checker.stop()
+
+            self.update_presence()
 
         else:
             if self.getter.regions == []:
@@ -1044,6 +1079,14 @@ class GUI():
                 return
 
             self.start_stop_btn.setText("Stop")
+
+            regions = len(self.getter.regions)
+            products = len(self.getter.products)
+            links = len(self.getter.get_requests_links())
+            if self.setting_use_selenium.isChecked():
+                links += len(self.getter.get_selenium_links())
+
+            self.update_presence(details=f"{regions} Regions - {products} Products", state=f"{links} Links", small_image="play", small_text="Running")
 
             self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log, links_per_instance=self.setting_links_per_r.value())
             self.req_checker.start()
