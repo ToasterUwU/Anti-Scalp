@@ -409,7 +409,7 @@ class Requester():
             self.selectors = json.load(f)
 
     def get_by_selector(self, tree:_ElementTree, selector):
-        if selector.startswith("//"):
+        if selector.startswith("/"):
             return tree.xpath(selector)
         else:
             selector = CSSSelector(selector)
