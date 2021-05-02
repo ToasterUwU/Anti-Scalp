@@ -387,8 +387,12 @@ class Selenium_Checker(Checker):
         self.run = True
         def start_ths():
             for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
-                threading.Thread(name="Browser-Thread", target=check_links, args=[part_links], daemon=True).start()
-                time.sleep(5)
+                if self.run:
+                    threading.Thread(name="Browser-Thread", target=check_links, args=[part_links], daemon=True).start()
+                    time.sleep(5)
+                else:
+                    break
+
         threading.Thread(name="Browser-Starter", target=start_ths, daemon=True).start()
 
     def close(self):
