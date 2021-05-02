@@ -37,7 +37,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
 from selenium import webdriver
 from tldextract import extract as url_parse
 
-VERSION = "1.3"
+VERSION = "1.3.1"
 
 logging.basicConfig(
     level=logging.INFO,
