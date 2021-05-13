@@ -110,5 +110,15 @@
         "buyable": "#addToCartButtonId",
         "price": "span.price_column.right",
         "requests": true
+    },
+    "ballicom": {
+        "buyable": "//*[@id='add_to_cart_frm']/ul/li[2]/button",
+        "price": "body > div.bodywrap > section > div.container.margin-bottom-20 > div:nth-child(2) > div.col-xs-12.col-sm-4.col-md-3.stickyContainer > div.detail-blk-right.tab-right > div.price-block.product-sidebar-price > div.price > span:nth-child(2)",
+        "requests": true
+    },
+    "amd": {
+        "buyable": "button.btn-shopping-cart",
+        "price": "div.product-page-description > h4",
+        "requests": true
     }
 }
