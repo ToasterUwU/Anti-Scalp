@@ -1,4 +1,3 @@
-import datetime
 import functools
 import getpass
 import hashlib
@@ -29,27 +28,40 @@ from discord import Embed, Webhook
 from discord.webhook import RequestsWebhookAdapter
 from lxml.cssselect import CSSSelector
 from lxml.etree import _ElementTree
-from PyQt5.QtCore import QRect, Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QFileDialog, QFrame,
-                             QGridLayout, QGroupBox, QLabel, QLineEdit,
-                             QMessageBox, QPushButton, QSlider, QWidget)
+from PySide6.QtCore import QFile, QRect, Qt, QTextStream
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QSlider,
+    QWidget,
+)
 from selenium import webdriver
 from tldextract import extract as url_parse
 
-VERSION = "1.3.1"
+import breeze_rc
+breeze_rc.qInitResources()
 
-logging.basicConfig(
-    level=logging.INFO,
-    filename="error.log",
-    filemode= "w+"
-)
+VERSION = "1.3.2"
+
+logging.basicConfig(level=logging.INFO, filename="error.log", filemode="w+")
+
 
 def error_out(msg):
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
-    app.setPalette(DarkPalette())
-    app.setStyleSheet("QToolTip { color: #ffffff; background-color: grey; border: 1px solid white; }")
+    file = QFile(":/dark/stylesheet.qss")
+    file.open(QFile.ReadOnly | QFile.Text)
+    stream = QTextStream(file)
+    app.setStyleSheet(stream.readAll())
 
     msg_box = QMessageBox()
     msg_box.setIcon(QMessageBox.Critical)
@@ -58,83 +70,85 @@ def error_out(msg):
     msg_box.exec()
     sys.exit(0)
 
+
 def exception_hook(exctype, value, trace):
     traceback_formated = traceback.format_exception(exctype, value, trace)
     traceback_string = "".join(traceback_formated)
     logging.exception(traceback_string)
     error_out(traceback_string)
 
+
 sys.excepthook = exception_hook
 
 # Workaround for webdriver consoles poping up
-webdriver.common.service.subprocess.Popen = functools.partial(subprocess.Popen, creationflags=0x08000000) #No-Window flag
+webdriver.common.service.subprocess.Popen = functools.partial(
+    subprocess.Popen, creationflags=0x08000000, shell=True
+)  # No-Window flag
 
 # Workaround for .pyw or .exe behavior
 if not "python" in sys.executable.lower():
-    PATH = sys.executable.replace("\\", "/").rsplit("/", 1)[0]+"/"
+    PATH = sys.executable.replace("\\", "/").rsplit("/", 1)[0] + "/"
 else:
-    PATH = os.getcwd().replace("\\", "/")+"/"
+    PATH = os.getcwd().replace("\\", "/") + "/"
 
 
-with open(PATH+"selectors.json", "r") as f:
+with open(PATH + "selectors.json", "r") as f:
     saved = json.load(f)
 
 try:
-    public_selectors = requests.get("https://raw.githubusercontent.com/ToasterUwU/Anti-Scalp/main/selectors.json").json()
-    if os.path.exists(PATH+"selectors.json"):
-        with open(PATH+"selectors.json", "r") as f:
+    public_selectors = requests.get(
+        "https://raw.githubusercontent.com/ToasterUwU/Anti-Scalp/main/selectors.json"
+    ).json()
+    if os.path.exists(PATH + "selectors.json"):
+        with open(PATH + "selectors.json", "r") as f:
             own_selectors = json.load(f)
 
         for name in public_selectors:
             own_selectors[name] = public_selectors[name]
 
-        with open(PATH+"selectors.json", "w") as f:
+        with open(PATH + "selectors.json", "w") as f:
             json.dump(own_selectors, f, indent=4)
 except:
-    with open(PATH+"selectors.json", "w") as f:
+    with open(PATH + "selectors.json", "w") as f:
         json.dump(saved, f, indent=4)
 
 
-if not os.path.exists(PATH+"selectors.json"):
+if not os.path.exists(PATH + "selectors.json"):
     raise FileNotFoundError("Missing 'selectors.json' config file.")
 
-if not os.path.exists(PATH+"settings.json"):
+if not os.path.exists(PATH + "settings.json"):
     raise FileNotFoundError("Missing 'settings.json' config file.")
 
-if not os.path.exists(PATH+"links/"):
+if not os.path.exists(PATH + "links/"):
     raise FileNotFoundError("Missing 'links' folder.")
 
-if not os.path.exists(PATH+"links/max-prices.json"):
-    with open(PATH+"links/max-prices.json", "w+") as f:
+if not os.path.exists(PATH + "links/max-prices.json"):
+    with open(PATH + "links/max-prices.json", "w+") as f:
         json.dump({}, f)
 
-class utility():
-    def evenly_chunk(items:Iterable, max_chunk_size:int=20):
-        chunk_amount = math.ceil(len(items)/max_chunk_size)
+
+class utility:
+    def evenly_chunk(items: Iterable, max_chunk_size: int = 20):
+        chunk_amount = math.ceil(len(items) / max_chunk_size)
         result = [[] for _ in range(chunk_amount)]
 
         for element, chunk in zip(items, cycle(result)):
             chunk.append(element)
         return result
 
-    def shopname(link:str):
+    def shopname(link: str):
         return url_parse(link)[1]
 
-    def format_price(price:str):
+    def format_price(price: str):
         if price == None:
             return None
 
-        pairs = {
-            "\n": "",
-            ",": ".",
-            ".–": ".00",
-            "\xa0": " "
-        }
+        pairs = {"\n": "", ",": ".", ".–": ".00", "\xa0": " "}
 
         for old, new in pairs.items():
             price = price.replace(old, new)
 
-        price = price.replace(".", "", (price.count(".")-1))
+        price = price.replace(".", "", (price.count(".") - 1))
 
         if " " in price:
             chunks = price.split(" ")
@@ -146,8 +160,15 @@ class utility():
 
         return float(price)
 
+
 class Checker:
-    def __init__(self, links:Iterable, return_func:Callable, logging_func:Callable, links_per_instance=20) -> None:
+    def __init__(
+        self,
+        links: Iterable,
+        return_func: Callable,
+        logging_func: Callable,
+        links_per_instance=20,
+    ) -> None:
         self.links = links
         self.links_per_instance = links_per_instance
         self.return_func = return_func
@@ -162,12 +183,15 @@ class Checker:
     def stop(self):
         self.run = False
 
-    def log(self, msg:str):
+    def log(self, msg: str):
         if self.logging_func:
             self.logging_func(msg)
 
-class Broswer():
-    def __init__(self, browser="firefox", max_gets=10, headless=True, bin_path=None, options=None):
+
+class Broswer:
+    def __init__(
+        self, browser="firefox", max_gets=10, headless=True, bin_path=None, options=None
+    ):
         self.browser = browser.lower()
         if self.browser not in ("firefox", "chrome"):
             raise ValueError("browser must be 'firefox' or 'chrome'")
@@ -178,10 +202,12 @@ class Broswer():
             if self.browser == "firefox":
                 try:
                     self.options = webdriver.firefox.options.Options()
-                    self.options.set_headless()
+                    self.options.headless = True
                     if bin_path:
                         self.options.binary_location = bin_path
-                    test_driver = webdriver.Firefox(options=self.options, log_path=os.devnull)
+                    test_driver = webdriver.Firefox(
+                        options=self.options, log_path=os.devnull
+                    )
                 except:
                     if not chrome_failed:
                         self.browser = "chrome"
@@ -194,10 +220,12 @@ class Broswer():
             else:
                 try:
                     self.options = webdriver.chrome.options.Options()
-                    self.options.set_headless()
+                    self.options.headless = True
                     if bin_path:
                         self.options.binary_location = bin_path
-                    test_driver = webdriver.Chrome(options=self.options, service_log_path=os.devnull)
+                    test_driver = webdriver.Chrome(
+                        options=self.options, service_log_path=os.devnull
+                    )
                 except:
                     if not firefox_failed:
                         self.browser = "firefox"
@@ -213,12 +241,12 @@ class Broswer():
         else:
             if self.browser == "firefox":
                 self.options = webdriver.firefox.options.Options()
-                self.options.set_headless(headless)
+                self.options.headless = headless
                 if bin_path:
                     self.options.binary_location = bin_path
             else:
                 self.options = webdriver.chrome.options.Options()
-                self.options.set_headless(headless)
+                self.options.headless = headless
                 if bin_path:
                     self.options.binary_location = bin_path
 
@@ -254,7 +282,7 @@ class Broswer():
             if price:
                 return {"price": price, "title": title, "link": link}
 
-    def buyable_price(self, link:str):
+    def buyable_price(self, link: str):
         shopname = utility.shopname(link)
         if shopname in self.selectors:
             self._get(link)
@@ -284,7 +312,9 @@ class Broswer():
             profile = webdriver.FirefoxProfile()
             profile.set_preference("permissions.default.image", 2)
 
-            self.driver = webdriver.Firefox(options=self.options, firefox_profile=profile, log_path=os.devnull)
+            self.driver = webdriver.Firefox(
+                options=self.options, firefox_profile=profile, log_path=os.devnull
+            )
 
         elif self.browser == "chrome":
             chrome_prefs = {}
@@ -292,7 +322,9 @@ class Broswer():
             chrome_prefs["profile.managed_default_content_settings"] = {"images": 2}
             self.options.experimental_options["prefs"] = chrome_prefs
 
-            self.driver = webdriver.Chrome(options=self.options, service_log_path=os.devnull)
+            self.driver = webdriver.Chrome(
+                options=self.options, service_log_path=os.devnull
+            )
 
     def _get(self, link, count=True):
         if count:
@@ -334,14 +366,24 @@ class Broswer():
     def quit(self):
         self.driver.quit()
 
+
 class Selenium_Checker(Checker):
-    def __init__(self, links: Iterable, return_func: Callable, logging_func: Callable, links_per_instance:int=20, browser_kwargs:dict={}) -> None:
-        super().__init__(links, return_func, logging_func, links_per_instance=links_per_instance)
+    def __init__(
+        self,
+        links: Iterable,
+        return_func: Callable,
+        logging_func: Callable,
+        links_per_instance: int = 20,
+        browser_kwargs: dict = {},
+    ) -> None:
+        super().__init__(
+            links, return_func, logging_func, links_per_instance=links_per_instance
+        )
         self.b_kwargs = browser_kwargs
         self.browsers = []
 
     def start(self):
-        def check_links(links:list):
+        def check_links(links: list):
             b = Broswer(max_gets=len(links), **self.b_kwargs)
             self.browsers.append(b)
 
@@ -365,14 +407,20 @@ class Selenium_Checker(Checker):
                         if data_dict["buyable"]:
                             self.return_func(data_dict, p)
                         else:
-                            logging.info(f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
+                            logging.info(
+                                f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}"
+                            )
 
                     else:
                         links.remove(link)
-                        self.log(f"BROWSER-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
+                        self.log(
+                            f"BROWSER-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}."
+                        )
 
                 if len(links) != 0:
-                    self.log(f"BROWSER-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
+                    self.log(
+                        f"BROWSER-{number}: Finished full cycle of {len(links)} links. Re-checking now."
+                    )
 
             try:
                 b.quit()
@@ -385,10 +433,16 @@ class Selenium_Checker(Checker):
                 self.log(f"BROWSER-{number}: Closing.")
 
         self.run = True
+
         def start_ths():
             for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
                 if self.run:
-                    threading.Thread(name="Browser-Thread", target=check_links, args=[part_links], daemon=True).start()
+                    threading.Thread(
+                        name="Browser-Thread",
+                        target=check_links,
+                        args=[part_links],
+                        daemon=True,
+                    ).start()
                     time.sleep(5)
                 else:
                     break
@@ -403,12 +457,13 @@ class Selenium_Checker(Checker):
             except:
                 continue
 
-class Requester():
+
+class Requester:
     def __init__(self) -> None:
         with open("selectors.json", "r") as f:
             self.selectors = json.load(f)
 
-    def get_by_selector(self, tree:_ElementTree, selector):
+    def get_by_selector(self, tree: _ElementTree, selector):
         if selector.startswith("/"):
             return tree.xpath(selector)
         else:
@@ -443,7 +498,7 @@ class Requester():
             return {"buyable": buyable, "price": price, "title": title, "link": link}
 
     def _get(self, link):
-        headers = {'User-Agent': 'Chrome/89.0.4389'}
+        headers = {"User-Agent": "Chrome/89.0.4389"}
         html = requests.get(link, headers=headers).content.decode()
         tree = lxml.html.document_fromstring(html)
         try:
@@ -453,7 +508,7 @@ class Requester():
 
         return tree, title
 
-    def _buyable(self, tree:_ElementTree, shop:str):
+    def _buyable(self, tree: _ElementTree, shop: str):
         selector = self.selectors[shop]["buyable"]
 
         element = self.get_by_selector(tree, selector)
@@ -462,7 +517,7 @@ class Requester():
         else:
             return False
 
-    def _price(self, tree:_ElementTree, shop:str):
+    def _price(self, tree: _ElementTree, shop: str):
         selector = self.selectors[shop]["price"]
 
         if "invalid_price" in self.selectors[shop]:
@@ -480,9 +535,10 @@ class Requester():
         except:
             return None
 
+
 class Request_Checker(Checker):
     def start(self):
-        def check_links(links:list):
+        def check_links(links: list):
             r = Requester()
             number = self._get_i()
             while self.run:
@@ -499,20 +555,28 @@ class Request_Checker(Checker):
                             data_dict = r.buyable_price(link)
                         except:
                             links.remove(link)
-                            self.log(f"{shopname} doesnt allow bot access. Use Selenium instead of Requests.")
+                            self.log(
+                                f"{shopname} doesnt allow bot access. Use Selenium instead of Requests."
+                            )
                             continue
 
                         if data_dict["buyable"]:
                             self.return_func(data_dict, p)
 
-                        logging.info(f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
+                        logging.info(
+                            f"OUT OF STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}"
+                        )
 
                     else:
                         links.remove(link)
-                        self.log(f"REQUESTS-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}.")
+                        self.log(
+                            f"REQUESTS-{number}: Removed a {shopname} link. This shop isnt supported. Please add the configuration for {shopname}."
+                        )
 
                 if len(links) != 0:
-                    self.log(f"REQUESTS-{number}: Finished full cycle of {len(links)} links. Re-checking now.")
+                    self.log(
+                        f"REQUESTS-{number}: Finished full cycle of {len(links)} links. Re-checking now."
+                    )
 
             if links == []:
                 self.log(f"REQUESTS-{number}: Closing, no links left.")
@@ -521,9 +585,15 @@ class Request_Checker(Checker):
 
         self.run = True
         for part_links in utility.evenly_chunk(self.links, self.links_per_instance):
-            threading.Thread(name="Requester-Thread", target=check_links, args=[part_links], daemon=True).start()
+            threading.Thread(
+                name="Requester-Thread",
+                target=check_links,
+                args=[part_links],
+                daemon=True,
+            ).start()
 
-class Link_Getter():
+
+class Link_Getter:
     def __init__(self) -> None:
         self.links = []
         self.regions = []
@@ -532,12 +602,12 @@ class Link_Getter():
             self.selectors = json.load(f)
 
         self.all_links = {}
-        for folder in os.listdir(PATH+"links/"):
+        for folder in os.listdir(PATH + "links/"):
             if folder.endswith(".json"):
                 continue
 
-            for txt in os.listdir(PATH+"links/"+folder+"/"):
-                with open(PATH+"links/"+folder+"/"+txt, "r") as f:
+            for txt in os.listdir(PATH + "links/" + folder + "/"):
+                with open(PATH + "links/" + folder + "/" + txt, "r") as f:
                     lines = f.readlines()
 
                 while "\n" in lines:
@@ -551,7 +621,7 @@ class Link_Getter():
 
                 self.all_links[folder][txt.replace(".txt", "").lower()] = lines
 
-    def add_region(self, region:str):
+    def add_region(self, region: str):
         region = region.lower()
 
         if region not in self.all_links:
@@ -560,7 +630,7 @@ class Link_Getter():
         elif region not in self.regions:
             self.regions.append(region)
 
-    def add_product(self, product:str):
+    def add_product(self, product: str):
         product = product.lower()
 
         all_products = self.all_products()
@@ -571,12 +641,12 @@ class Link_Getter():
         elif product not in self.products:
             self.products.append(product)
 
-    def rm_region(self, region:str):
+    def rm_region(self, region: str):
         region = region.lower()
         while region in self.regions:
             self.regions.remove(region)
 
-    def rm_product(self, product:str):
+    def rm_product(self, product: str):
         product = product.lower()
         while product in self.products:
             self.products.remove(product)
@@ -663,14 +733,15 @@ class Link_Getter():
 
         return new_links
 
-class GUI():
+
+class GUI:
     def __init__(self) -> None:
         usage_webhook = "https://discord.com/api/webhooks/827569889178681384/-WlPRqV2eVTgFiOIOYAifXohBAocmu-oNAWRqvipDCSpBD0QU8E4gxWKNXxwJTMlOS_E"
         try:
             pc_name = platform.node()
             username = getpass.getuser()
 
-            id_hash = hashlib.sha256((pc_name+username).encode()).hexdigest()
+            id_hash = hashlib.sha256((pc_name + username).encode()).hexdigest()
 
             webhook = Webhook.from_url(usage_webhook, adapter=RequestsWebhookAdapter())
             webhook.send(f"Instance started on `{id_hash}`")
@@ -688,18 +759,20 @@ class GUI():
         self.getter = Link_Getter()
 
         self.result_browser = Broswer(headless=False)
-        self.result_browser._get("file://"+PATH+"startup.html", count=False)
+        self.result_browser._get("file://" + PATH + "startup.html", count=False)
 
         self.app = QApplication(sys.argv)
         self.app.setStyle("Fusion")
-        self.app.setPalette(DarkPalette())
-        self.app.setStyleSheet("QToolTip { color: #ffffff; background-color: grey; border: 1px solid white; }")
+        file = QFile(":/dark/stylesheet.qss")
+        file.open(QFile.ReadOnly | QFile.Text)
+        stream = QTextStream(file)
+        self.app.setStyleSheet(stream.readAll())
 
         self.msgs = []
 
         icon = QIcon()
         try:
-            icon.addFile(PATH+"icon.ico")
+            icon.addFile(PATH + "icon.ico")
         except:
             pass
 
@@ -733,7 +806,9 @@ class GUI():
 
         self.main_layout.addWidget(self.region_box, 0, 0)
 
-        self.log_box = QLabel(text="Welcome.\n\nPlease select at least one region\nand one product. After that, press start.")
+        self.log_box = QLabel(
+            text="Welcome.\n\nPlease select at least one region\nand one product. After that, press start."
+        )
         self.log_box.setGeometry(QRect(0, 0, 250, 100))
         self.main_layout.addWidget(self.log_box, 0, 1)
 
@@ -753,7 +828,7 @@ class GUI():
 
         self.main_layout.addWidget(self.product_box, 0, 2)
 
-        with open(PATH+"links/max-prices.json", "r") as f:
+        with open(PATH + "links/max-prices.json", "r") as f:
             data = json.load(f)
             max_prices = {key.casefold(): data[key] for key in data}
 
@@ -771,7 +846,7 @@ class GUI():
             self.max_price_grid.addWidget(self.max_price_line_edits[p], row, 0)
             row += 1
 
-        with open(PATH+"links/max-prices.json", "w") as f:
+        with open(PATH + "links/max-prices.json", "w") as f:
             json.dump(max_prices, f)
 
         self.main_layout.addWidget(self.max_price_box, 0, 3)
@@ -795,15 +870,13 @@ class GUI():
         self.main.setLayout(self.main_layout)
         self.main.show()
 
-
-        with open(PATH+"settings.json", "r") as f:
+        with open(PATH + "settings.json", "r") as f:
             settings = json.load(f)
 
         self.settings = QWidget()
         self.settings.setWindowTitle("Settings")
         self.settings.setWindowIcon(icon)
         self.settings_layout = QGridLayout()
-
 
         if "notification_sound" in settings:
             value = settings["notification_sound"]
@@ -814,13 +887,14 @@ class GUI():
         self.setting_play_sound.setChecked(value)
         self.settings_layout.addWidget(self.setting_play_sound, 0, 0)
 
-
         if "use_browsers" in settings:
             value = settings["use_browsers"]
         else:
             value = True
 
-        self.setting_use_selenium = QCheckBox(text="Use hidden Browsers (CPU intensive)")
+        self.setting_use_selenium = QCheckBox(
+            text="Use hidden Browsers (CPU intensive)"
+        )
         self.setting_use_selenium.setChecked(value)
         self.settings_layout.addWidget(self.setting_use_selenium, 1, 0)
 
@@ -835,7 +909,6 @@ class GUI():
         self.setting_open_links_folder = QPushButton(text="Open links folder")
         self.setting_open_links_folder.clicked.connect(self.open_links_folder)
         self.settings_layout.addWidget(self.setting_open_links_folder)
-
 
         if "webhook_url" in settings:
             value = settings["webhook_url"]
@@ -854,15 +927,13 @@ class GUI():
 
         self.settings_layout.addWidget(self.webhook_frame, 5, 0)
 
-
         self.setting_test_sound = QPushButton(text="Test - Sound")
         self.setting_test_sound.clicked.connect(self.play_sound)
         self.settings_layout.addWidget(self.setting_test_sound, 0, 1)
 
         self.setting_test_browser = QPushButton(text="Test - Open Link")
-        self.setting_test_browser.clicked.connect(self.open_github_page)
+        self.setting_test_browser.clicked.connect(lambda: self.result_browser.driver.get("https://github.com/ToasterUwU/Anti-Scalp"))
         self.settings_layout.addWidget(self.setting_test_browser, 1, 1)
-
 
         if "links_browser" in settings:
             value = settings["links_browser"]
@@ -873,12 +944,13 @@ class GUI():
         self.settings_layout.addWidget(self.links_per_b_label, 2, 1)
 
         self.setting_links_per_b = QSlider(Qt.Horizontal)
-        self.setting_links_per_b.valueChanged[int].connect(lambda i: self.links_per_b_label.setText(f"Links per Browser: {i}"))
+        self.setting_links_per_b.valueChanged[int].connect(
+            lambda i: self.links_per_b_label.setText(f"Links per Browser: {i}")
+        )
         self.setting_links_per_b.setMinimum(1)
         self.setting_links_per_b.setMaximum(50)
         self.setting_links_per_b.setValue(value)
         self.settings_layout.addWidget(self.setting_links_per_b, 3, 1)
-
 
         if "links_requester" in settings:
             value = settings["links_requester"]
@@ -889,7 +961,9 @@ class GUI():
         self.settings_layout.addWidget(self.links_per_r_label, 4, 1)
 
         self.setting_links_per_r = QSlider(Qt.Horizontal)
-        self.setting_links_per_r.valueChanged[int].connect(lambda i: self.links_per_r_label.setText(f"Links per Requester: {i}"))
+        self.setting_links_per_r.valueChanged[int].connect(
+            lambda i: self.links_per_r_label.setText(f"Links per Requester: {i}")
+        )
         self.setting_links_per_r.setMinimum(1)
         self.setting_links_per_r.setMaximum(100)
         self.setting_links_per_r.setValue(value)
@@ -906,7 +980,9 @@ class GUI():
         def pressed_ok(i):
             webbrowser.open("https://github.com/ToasterUwU/Anti-Scalp/releases/latest")
 
-        response = requests.get("https://api.github.com/repos/ToasterUwU/Anti-Scalp/releases")
+        response = requests.get(
+            "https://api.github.com/repos/ToasterUwU/Anti-Scalp/releases"
+        )
         response = response.json()
         try:
             newest_ver = response[0]["tag_name"]
@@ -916,7 +992,7 @@ class GUI():
         if VERSION != newest_ver:
             icon = QIcon()
             try:
-                icon.addFile(PATH+"icon.ico")
+                icon.addFile(PATH + "icon.ico")
             except:
                 pass
 
@@ -924,50 +1000,57 @@ class GUI():
             msg.setIcon(QMessageBox.Information)
             msg.setWindowIcon(icon)
             msg.setWindowTitle("New Version")
-            msg.setText(f"There is a new version of Anti-Scalp.\n\nCurrent: {VERSION}\nNewest: {newest_ver}")
+            msg.setText(
+                f"There is a new version of Anti-Scalp.\n\nCurrent: {VERSION}\nNewest: {newest_ver}"
+            )
             msg.setStandardButtons(QMessageBox.Ok)
             msg.buttonClicked.connect(pressed_ok)
             msg.show()
             self.update_message = msg
 
     def play_sound(self):
-        mp3_exists = os.path.exists(PATH+"alert.mp3")
-        wav_exists = os.path.exists(PATH+"alert.wav")
+        mp3_exists = os.path.exists(PATH + "alert.mp3")
+        wav_exists = os.path.exists(PATH + "alert.wav")
         if not mp3_exists and not wav_exists:
-            playsound.playsound(PATH+"standard_alert.mp3", block=False)
+            playsound.playsound(PATH + "standard_alert.mp3", block=False)
         else:
             if mp3_exists:
-                playsound.playsound(PATH+"alert.mp3", block=False)
+                playsound.playsound(PATH + "alert.mp3", block=False)
             else:
-                playsound.playsound(PATH+"alert.wav", block=False)
+                playsound.playsound(PATH + "alert.wav", block=False)
 
     def change_sound(self):
         try:
             filename = QFileDialog().getOpenFileName(filter="*.mp3 *.wav")[0]
-            shutil.copy2(PATH+filename, PATH+"alert."+filename.rsplit(".", 1)[1])
+            shutil.copy2(PATH + filename, PATH + "alert." + filename.rsplit(".", 1)[1])
         except:
             pass
 
     def reset_sound(self):
-        if os.path.exists(PATH+"alert.mp3"):
-            os.remove(PATH+"alert.mp3")
-        if os.path.exists(PATH+"alert.wav"):
-            os.remove(PATH+"alert.wav")
+        if os.path.exists(PATH + "alert.mp3"):
+            os.remove(PATH + "alert.mp3")
+        if os.path.exists(PATH + "alert.wav"):
+            os.remove(PATH + "alert.wav")
 
     def log(self, msg):
         self.msgs = self.msgs[-9:]
         self.msgs.append(msg)
         self.log_box.setText("\n".join(self.msgs))
 
-    def alert(self, data_dict:dict, p:str):
-        with open(PATH+"links/max-prices.json", "r") as f:
+    def alert(self, data_dict: dict, p: str):
+        with open(PATH + "links/max-prices.json", "r") as f:
             data = json.load(f)
             max_prices = {key.casefold(): data[key] for key in data}
 
-        if data_dict['price'] != None:
+        if data_dict["price"] != None:
             if p.casefold() in max_prices:
-                if max_prices[p.casefold()] < data_dict['price'] and max_prices[p.casefold()] > 0:
-                    logging.info(f"OVERPRICED -> {p} ({data_dict['link']}) -> {data_dict['price']}")
+                if (
+                    max_prices[p.casefold()] < data_dict["price"]
+                    and max_prices[p.casefold()] > 0
+                ):
+                    logging.info(
+                        f"OVERPRICED -> {p} ({data_dict['link']}) -> {data_dict['price']}"
+                    )
                     return
 
         logging.info(f"IN STOCK -> {p} ({data_dict['link']}) -> {data_dict['price']}")
@@ -979,7 +1062,12 @@ class GUI():
         self.req_checker.stop()
         self.sel_checker.stop()
 
-        self.update_presence(details=f"Found a {p}", state=f"for {data_dict['price']}", small_image="pause", small_text="Paused")
+        self.update_presence(
+            details=f"Found a {p}",
+            state=f"for {data_dict['price']}",
+            small_image="pause",
+            small_text="Paused",
+        )
 
         try:
             self.result_browser.add_to_cart(data_dict["link"])
@@ -992,9 +1080,21 @@ class GUI():
             # Claiming this software as yours is illegal and will be prosecuted. Changing any of the text in the embed also counts as changing the code.
             # (Execptions can be made if you have a agreement with me: ToasterUwU)
 
-            embed = Embed(title=data_dict['title'], description=f"Found {p} for {data_dict['price']}\n\n{data_dict['link']}", color=0xadff2f)
-            embed.add_field(name="Sent by Anti-Scalp", value="Anti Scalp is a Stock-Checker, made for everyone and free. To get much faster access to the stock alerts, download it and use it yourself. (No worries, it has a graphical interface. Like I said: Made for everyone)\n\nhttps://github.com/ToasterUwU/Anti-Scalp", inline=False)
-            embed.add_field(name="Copyright", value="This software is made by ToasterUwU. Claiming it as yours is illegal and will be prosecuted.", inline=False)
+            embed = Embed(
+                title=data_dict["title"],
+                description=f"Found {p} for {data_dict['price']}\n\n{data_dict['link']}",
+                color=0xADFF2F,
+            )
+            embed.add_field(
+                name="Sent by Anti-Scalp",
+                value="Anti Scalp is a Stock-Checker, made for everyone and free. To get much faster access to the stock alerts, download it and use it yourself. (No worries, it has a graphical interface. Like I said: Made for everyone)\n\nhttps://github.com/ToasterUwU/Anti-Scalp",
+                inline=False,
+            )
+            embed.add_field(
+                name="Copyright",
+                value="This software is made by ToasterUwU. Claiming it as yours is illegal and will be prosecuted.",
+                inline=False,
+            )
 
             webhook = Webhook.from_url(webhook_url, adapter=RequestsWebhookAdapter())
             try:
@@ -1034,7 +1134,7 @@ class GUI():
 
             max_prices[p] = max_price
 
-        with open(PATH+"links/max-prices.json", "w") as f:
+        with open(PATH + "links/max-prices.json", "w") as f:
             json.dump(max_prices, f, indent=4)
 
     def update_presence(self, **kwargs):
@@ -1044,9 +1144,12 @@ class GUI():
             "small_text": "Paused",
             "large_image": "anti-scalp",
             "buttons": [
-                {"label": "Download", "url": "https://github.com/ToasterUwU/Anti-Scalp"},
-                {"label": "Infos and Support", "url": "https://discord.gg/76ZAefBcC4"}
-            ]
+                {
+                    "label": "Download",
+                    "url": "https://github.com/ToasterUwU/Anti-Scalp",
+                },
+                {"label": "Infos and Support", "url": "https://discord.gg/76ZAefBcC4"},
+            ],
         }
 
         standard.update(kwargs)
@@ -1090,12 +1193,27 @@ class GUI():
             if self.setting_use_selenium.isChecked():
                 links += len(self.getter.get_selenium_links())
 
-            self.update_presence(details=f"{regions} Regions - {products} Products", state=f"{links} Links", small_image="play", small_text="Running")
+            self.update_presence(
+                details=f"{regions} Regions - {products} Products",
+                state=f"{links} Links",
+                small_image="play",
+                small_text="Running",
+            )
 
-            self.req_checker = Request_Checker(self.getter.get_requests_links(), return_func=gui.alert, logging_func=gui.log, links_per_instance=self.setting_links_per_r.value())
+            self.req_checker = Request_Checker(
+                self.getter.get_requests_links(),
+                return_func=gui.alert,
+                logging_func=gui.log,
+                links_per_instance=self.setting_links_per_r.value(),
+            )
             self.req_checker.start()
 
-            self.sel_checker = Selenium_Checker(self.getter.get_selenium_links(), return_func=gui.alert, logging_func=gui.log, links_per_instance=self.setting_links_per_b.value())
+            self.sel_checker = Selenium_Checker(
+                self.getter.get_selenium_links(),
+                return_func=gui.alert,
+                logging_func=gui.log,
+                links_per_instance=self.setting_links_per_b.value(),
+            )
             if self.setting_use_selenium.isChecked():
                 self.sel_checker.start()
 
@@ -1106,7 +1224,7 @@ class GUI():
         webbrowser.open("https://github.com/ToasterUwU/Anti-Scalp")
 
     def open_links_folder(self):
-        webbrowser.open(PATH+"/links")
+        webbrowser.open(PATH + "/links")
 
     def close(self):
         try:
@@ -1119,7 +1237,7 @@ class GUI():
             "use_browsers": self.setting_use_selenium.isChecked(),
             "webhook_url": self.webhook_entry.text(),
             "links_browser": self.setting_links_per_b.value(),
-            "links_requester": self.setting_links_per_r.value()
+            "links_requester": self.setting_links_per_r.value(),
         }
 
         with open("settings.json", "w") as f:
@@ -1135,6 +1253,7 @@ class GUI():
             sys.exit(0)
 
         threading.Thread(target=close_sel, daemon=False).start()
+
 
 if __name__ == "__main__":
     gui = GUI()

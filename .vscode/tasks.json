@@ -2,11 +2,24 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Pyinstaller: Compile Script",
+      "type": "process",
+      "command": "pyinstaller.exe",
+      "args": [
+        "anti-scalp.pyw",
+        "--noconfirm"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "echo": false
+      }
+    },
+    {
       "label": "Inno Setup: Compile Script",
       "type": "process",
       "command": "ISCC.exe",
       "args": [
-        "${file}"
+        "installer-conf.iss"
       ],
       "presentation": {
         "reveal": "always",
@@ -15,7 +28,8 @@
       "group": {
         "kind": "build",
         "isDefault": true
-      }
+      },
+      "dependsOn": "Pyinstaller: Compile Script"
     }
   ]
 }
