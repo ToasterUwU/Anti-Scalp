@@ -1,3 +1,7 @@
+# IMPORTANT NOTICE
+
+**```This Project is discontinued. This is because i dont have the time or will to keep this alive. Very rarely people are using it, so it wont be that much of a lost. If you still want to use this, you can. But i wont offer help or support for this anymore.```**
+
 <img src="icon.ico" style="width: 100px">
 
 # Anti Scalp - A Stock-Checker for everyone
